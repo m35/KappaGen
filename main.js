@@ -274,7 +274,7 @@ $(function(){
 			}
 			
 			var startemote = allowedEmotes[seed];
-			var startemoteImgPath = emote.url;
+			var startemoteImgPath = startemote.url;
 			$('<img src="'+ startemoteImgPath +'" class="emote">')
 				.css({top:"100%",left:"50%","height":0})
 				.load(function() {
@@ -297,7 +297,7 @@ $(function(){
 								}
 							}});
 				})
-				.appendTo("body");;
+				.appendTo("body");
 		},
 		
 		fountain: function (allowedEmotes) {
@@ -312,8 +312,12 @@ $(function(){
 						.css({top:starty+"%",left:startx+"%",height: "0px"})
 						.load(function() {
 							$(this).show().velocity({height: settings.size},{duration: 1000*settings.duration, easing:[0.215, 0.61, 0.355, 1]});
-							var v0 = (Math.random()+1)*150/(settings.duration+1);
-							fountainEmotes.push({elem:$(this), x: startx, y: starty, vx: (Math.random()-0.5)*100/(settings.duration+1), vy: v0, v0: v0});
+							var vx = (Math.random()-0.5)*2;
+							var vy = (Math.random()+1.5);
+							var nv = (Math.random()+1)/(2*Math.sqrt(vx*vx+vy*vy)*(settings.duration+1));
+							vx *= nv*100;
+							vy *= nv*300;
+							fountainEmotes.push({elem:$(this), x: startx, y: starty, vx: vx, vy: vy, v0: vy});
 						})
 						.appendTo("body");
 				}, 5*settings.duration*i, i);
