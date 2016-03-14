@@ -89,7 +89,8 @@ $(function(){
 		once: false,
 		mods: false,
 		subonly: false,
-		emotesplosion: 0,
+		emotesplosion: 400,
+		emotesplosiontype: "explosion",
 		emotesplosiontriggers: "s",
 		size: 112,
 		max: 120,
@@ -100,7 +101,7 @@ $(function(){
 	var getEmotesplosionTriggers = function(type) {
 		var triggers = settings.emotesplosiontriggers.split("+");
 		for(var i=0;i<triggers.length;++i){
-			if(triggers[i] === type) return true;
+			if(triggers[i][0] === type) return true;
 		}
 		return false;
 	}
@@ -147,7 +148,7 @@ $(function(){
 				return;
 			}
 		}
-		else if(key === "emotesplosiontriggers") { /* nothing to change */ }
+		else if(key === "emotesplosiontriggers" || key === "emotesplosiontype") { /* nothing to change */ }
 		else if(val === "true" || val === "on" || val === true) val = true;
 		else if(val === "false" || val === "off" || val === false) val = false;
 		else {
@@ -211,43 +212,154 @@ $(function(){
 		}
 	}
 	
-	function emotesplosion() {
-		var allowedEmotes = [];
-		for(var i=0;i<subemotes.sub.length;++i) allowedEmotes.push(subemotes.sub[i]);
-		if(settings.bttv) for(var i=0;i<subemotes.bttv.length;++i) allowedEmotes.push(subemotes.bttv[i]);
-		if(settings.bttv && settings.gif) for(var i=0;i<subemotes.gif.length;++i) allowedEmotes.push(subemotes.gif[i]);
-		if(settings.ffz) for(var i=0;i<subemotes.ffz.length;++i) allowedEmotes.push(subemotes.ffz[i]);
-		
-		var seed = Math.floor(Math.random()*allowedEmotes.length);
-		var startx = Math.random()*100;
-		var starty = Math.random()*100;
-		for(var i=0;i<settings.emotesplosion;++i) {
-			setTimeout(function(k) {
-				var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
+	function emotesplosion(allowedEmotes) {
+		if(allowedEmotes === undefined) {
+			allowedEmotes = [];
+			for(var i=0;i<subemotes.sub.length;++i) allowedEmotes.push(subemotes.sub[i]);
+			if(settings.bttv) for(var i=0;i<subemotes.bttv.length;++i) allowedEmotes.push(subemotes.bttv[i]);
+			if(settings.bttv && settings.gif) for(var i=0;i<subemotes.gif.length;++i) allowedEmotes.push(subemotes.gif[i]);
+			if(settings.ffz) for(var i=0;i<subemotes.ffz.length;++i) allowedEmotes.push(subemotes.ffz[i]);
+		}
+		emotesplosiontypes[settings.emotesplosiontype](allowedEmotes);
+	}
+	
+	
+	var fountainEmotes = [];
+	
+	var emotesplosiontypes = {
+		random: function(allowedEmotes) {
+			var esk = Object.keys(emotesplosiontypes);
+			emotesplosiontypes[esk[Math.floor(Math.random()*esk.length)]](allowedEmotes);
+		},
+		explosion: function (allowedEmotes) {
+			var seed = Math.floor(Math.random()*allowedEmotes.length);
+			var startx = Math.random()*100;
+			var starty = Math.random()*100;
+			for(var i=0;i<settings.emotesplosion;++i) {
+				setTimeout(function(k) {
+					var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
+					var imgPath = emote.url;
+					$('<img src="'+ imgPath +'" class="emote">')
+						.css({top:starty+"%",left:startx+"%",height: "0px"})
+						.load(function() {
+							var vx = Math.random()-0.5;
+							var vy = Math.random()-0.5;
+							var v = 1/Math.sqrt(vx*vx+vy*vy);
+							vx *= v;
+							vy *= v;
+							$(this)
+								.show()
+								.velocity({top: (50+100*vy)+"%", left: (50+100*vx)+"%", height: settings.size*1.5},
+									{duration: 2000*(settings.duration+1),complete:function(e){$(e).remove()}, easing:[0.215, 0.61, 0.355, 1]});
+						})
+						.appendTo("body");
+				}, 5*settings.duration*i, i);
+			}
+		},
+	
+		firework: function (allowedEmotes) {
+			var seed = Math.floor(Math.random()*allowedEmotes.length);
+			var startx = Math.random()*50+25;
+			var starty = Math.random()*50+10;
+			
+			
+			var sparks = [];
+			
+			for(var i=1;i<settings.emotesplosion;++i) {
+				var emote = allowedEmotes[(i+seed)%allowedEmotes.length];
 				var imgPath = emote.url;
-				$('<img src="'+ imgPath +'" class="emote">')
-					.css({top:starty+"%",left:startx+"%",height: "0px"})
-					.load(function() {
-						var vx = Math.random()-0.5;
-						var vy = Math.random()-0.5;
-						var v = 1/Math.sqrt(vx*vx+vy*vy);
-						vx *= v;
-						vy *= v;
-						$(this)
-							.show()
-							.velocity({top: (50+100*vx)+"%", left: (50+100*vy)+"%", height: settings.size},
-								{duration: 2000*settings.duration,complete:function(e){$(e).remove()}, easing:[0.215, 0.61, 0.355, 1]});
-					})
-					.appendTo("body");
-			}, 5*settings.duration*i, i);
+				sparks.push($('<img src="'+ imgPath +'" class="emote">')
+					.css({top:starty+"%",left:startx+"%","height":settings.size})
+					.appendTo("body"));
+			}
+			
+			var startemote = allowedEmotes[seed];
+			var startemoteImgPath = emote.url;
+			$('<img src="'+ startemoteImgPath +'" class="emote">')
+				.css({top:"100%",left:"50%","height":0})
+				.load(function() {
+					$(this)
+						.show()
+						.velocity({top: starty+"%", left: startx+"%", height: settings.size},
+							{duration: 200*(settings.duration+1), easing: "linear", complete:function(e){
+								$(e).remove();
+								for(var i=0;i<sparks.length;++i) {
+									var v = Math.random();
+									var vx = Math.random()-0.5;
+									var vy = Math.random()-0.5;
+									var nv = v/Math.sqrt(vx*vx+vy*vy);
+									vx *= nv;
+									vy *= nv;
+									sparks[i]
+										.show()
+										.velocity({top: (starty+100*vy)+"%", left: (startx+100*vx)+"%", opacity: 0, height: 0},
+											{duration: 800*(settings.duration+1), easing: [0.215, 0.61, 0.355, 1],complete:function(f){$(f).remove()}})
+								}
+							}});
+				})
+				.appendTo("body");;
+		},
+		
+		fountain: function (allowedEmotes) {
+			var seed = Math.floor(Math.random()*allowedEmotes.length);
+			var startx = 50;
+			var starty = 100;
+			for(var i=0;i<settings.emotesplosion;++i) {
+				setTimeout(function(k) {
+					var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
+					var imgPath = emote.url;
+					$('<img src="'+ imgPath +'" class="emote">')
+						.css({top:starty+"%",left:startx+"%",height: "0px"})
+						.load(function() {
+							$(this).show().velocity({height: settings.size},{duration: 1000*settings.duration, easing:[0.215, 0.61, 0.355, 1]});
+							var v0 = (Math.random()+1)*150/(settings.duration+1);
+							fountainEmotes.push({elem:$(this), x: startx, y: starty, vx: (Math.random()-0.5)*100/(settings.duration+1), vy: v0, v0: v0});
+						})
+						.appendTo("body");
+				}, 5*settings.duration*i, i);
+			}
 		}
 	}
+	
+	var rafStart = Date.now();
+	function fountainStep(t){
+		var f = (t - rafStart)/1000.0;
+		for(var i=fountainEmotes.length-1;i>=0;--i) {
+			var fe = fountainEmotes[i];
+			fe.x += fe.vx*f;
+			fe.vy -= 600/((settings.duration+1)*(settings.duration+1))*f;
+			fe.y -= fe.vy*f;
+			if(fe.y > 120) {
+				fe.elem.remove();
+				fountainEmotes.splice(i,1);
+			}
+			else fe.elem.css({left:fe.x+"%",top:fe.y+"%"});
+		}
+		rafStart = t;
+		window.requestAnimationFrame(fountainStep);
+	}
+	window.requestAnimationFrame(fountainStep);
 
 	function handleCommand(w,data) {
 		split = data.text.toLowerCase().split(" ");
 		if(split.length >= 2 && (data.nick === channel || data.nick === "cbenni" || settings.mods && data.tags.mod === "1")) {
 			if(split[1] == "emotesplosiontest") {
 				emotesplosion();
+			} else if(split[1] == "customsplosion") {
+				var allowedEmotes = [];
+				for(var i=0;i<data.emotes.length;i++) {
+					var emote = data.emotes[i];
+					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0";
+					allowedEmotes.push({"url":imgPath});
+				}
+				var usplit = data.text.split(" ");
+				for(var i=2;i<usplit.length;++i) {
+					var emote = ExtraEmotes[usplit[i]];
+					if(emote !== undefined && settings[emote.type] && (emote.type != "gif" || settings.bttv)) {
+						allowedEmotes.push(emote);
+					}
+				}
+				emotesplosion(allowedEmotes);
 			} else if(split.length == 3) {
 				var oldval = settings[split[1]];
 				var res = setSetting(split[1],split[2]);
@@ -270,7 +382,10 @@ $(function(){
 		if(parsedmessage[STATE_COMMAND] == "PING") w.send('PONG');
 		else if (parsedmessage[STATE_COMMAND]=="PRIVMSG") {
 			var extmsg = getPrivmsgInfo(parsedmessage);
-			if(extmsg.text.toLowerCase().startsWith("!kappagen")) handleCommand(w,extmsg);
+			if(extmsg.text.toLowerCase().startsWith("!kappagen")) {
+				handleCommand(w,extmsg);
+				return;
+			}
 			else if(settings.subonly && extmsg.tags.subscriber !== "1" && extmsg.tags.mod !== "1") return; // do nothing for plebs when sub only mode is active.
 			else if(extmsg.nick === "twitchnotify") {
 				if(getEmotesplosionTriggers("s"))emotesplosion();
