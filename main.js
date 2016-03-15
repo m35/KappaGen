@@ -284,16 +284,18 @@ $(function(){
 							{duration: 200*(settings.duration+1), easing: "linear", complete:function(e){
 								$(e).remove();
 								for(var i=0;i<sparks.length;++i) {
-									var v = Math.random();
-									var vx = Math.random()-0.5;
-									var vy = Math.random()-0.5;
-									var nv = v/Math.sqrt(vx*vx+vy*vy);
-									vx *= nv;
-									vy *= nv;
-									sparks[i]
-										.show()
-										.velocity({top: (starty+100*vy)+"%", left: (startx+100*vx)+"%", opacity: 0, height: 0},
-											{duration: 800*(settings.duration+1), easing: [0.215, 0.61, 0.355, 1],complete:function(f){$(f).remove()}})
+									setTimeout(function(k) {
+										var v = Math.random();
+										var vx = Math.random()-0.5;
+										var vy = Math.random()-0.5;
+										var nv = v/Math.sqrt(vx*vx+vy*vy);
+										vx *= nv;
+										vy *= nv;
+										sparks[k]
+											.show()
+											.velocity({top: (starty+100*vy)+"%", left: (startx+100*vx)+"%", opacity: 0, height: 0},
+												{duration: 800*(settings.duration+1), easing: [0.215, 0.61, 0.355, 1],complete:function(f){$(f).remove()}})
+									}, 1, i);
 								}
 							}});
 				})
@@ -346,7 +348,7 @@ $(function(){
 
 	function handleCommand(w,data) {
 		split = data.text.toLowerCase().split(" ");
-		if(split.length >= 2 && (data.nick === channel || data.nick === "cbenni" || settings.mods && data.tags.mod === "1")) {
+		if(split.length >= 2 && (data.nick === channel || data.nick === "cbenni" || data.nick === "onslaught" || settings.mods && data.tags.mod === "1")) {
 			if(split[1] == "emotesplosiontest") {
 				emotesplosion();
 			} else if(split[1] == "customsplosion") {
