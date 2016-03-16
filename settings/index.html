@@ -146,6 +146,7 @@
 						<md-option value="explosion">explosion</md-option>
 						<md-option value="firework">firework</md-option>
 						<md-option value="fountain">fountain</md-option>
+						<md-option value="bubbles">bubbles</md-option>
 						<md-option value="random">random</md-option>
 					</md-select> <span ng-if="settings.emotesplosion>0">({{settings.emotesplosion}} random sub<span ng-if="settings.ffz">+ffz</span><span ng-if="settings.bttv">+bttv</span><span ng-if="settings.bttv && settings.gif">+gif</span> emote<span ng-if="settings.emotesplosion!=1">s</span> from this channel) when someone 
 					<md-select ng-model="settings.emotesplosiontriggers" ng-change="onchange()" class="inlineselect">
@@ -164,6 +165,11 @@
 			<div>Add a CLR-Browser to your global scenes and set it to show that page. You have to copy the link <strong>every time you change a setting!</strong><br>Alternatively, use these chat commands:</div>
 			<ul>
 				<li ng-repeat="(key, val) in settings" ng-if="key != 'v' && key != 'ch'"><code>!kappagen {{key}} {{val}}</code></li>
+			</ul>
+			<span>And some commands to test your emotesplosions:</span>
+			<ul>
+				<li><code>!kappagen emotesplosiontest</code></li>
+				<li><code>!kappagen customsplosion <emotes...></code></li>
 			</ul>
 		</div>
 	</div>

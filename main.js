@@ -225,6 +225,7 @@ $(function(){
 	
 	
 	var fountainEmotes = [];
+	var bubbleEmotes = [];
 	
 	var emotesplosiontypes = {
 		random: function(allowedEmotes) {
@@ -322,18 +323,41 @@ $(function(){
 							fountainEmotes.push({elem:$(this), x: startx, y: starty, vx: vx, vy: vy, v0: vy});
 						})
 						.appendTo("body");
-				}, 5*settings.duration*i, i);
+				}, 10*settings.duration*i*settings.size/112, i);
+			}
+		},
+		
+		bubbles: function (allowedEmotes) {
+			var seed = Math.floor(Math.random()*allowedEmotes.length);
+			for(var i=0;i<settings.emotesplosion;++i) {
+				setTimeout(function(k) {
+					var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
+					var imgPath = emote.url;
+					var startx = Math.random()*100;
+					var starty = 100*(1+settings.size/$(window).height());
+					$('<img src="'+ imgPath +'" class="emote">')
+						.css({top:starty+"%",left:startx+"%",height: settings.size+"px", opacity: 1})
+						.load(function() {
+							$(this).show().velocity({opacity: 0},{duration: 1000*(settings.duration+1), easing:[0.65, 0, 0.69, 0.35]});
+							var vy = 75*(0.1*Math.random()+1)/(settings.duration+1);
+							var phase = Math.random()*Math.PI*2;
+							bubbleEmotes.push({elem:$(this), x: startx, y: starty, vy: vy, t: performance.now(), phase: phase, amp: 1+50*settings.size/$(window).height()});
+						})
+						.appendTo("body");
+				}, 50*settings.duration*i*settings.size/112, i);
 			}
 		}
 	}
 	
 	var rafStart = Date.now();
-	function fountainStep(t){
+	function animStep(t){
 		var f = (t - rafStart)/1000.0;
+		var speedmodifier = 1/(settings.duration+1);
+		var speedmodifiersq = speedmodifier*speedmodifier;
 		for(var i=fountainEmotes.length-1;i>=0;--i) {
 			var fe = fountainEmotes[i];
 			fe.x += fe.vx*f;
-			fe.vy -= 600/((settings.duration+1)*(settings.duration+1))*f;
+			fe.vy -= 600*speedmodifiersq*f;
 			fe.y -= fe.vy*f;
 			if(fe.y > 120) {
 				fe.elem.remove();
@@ -341,10 +365,22 @@ $(function(){
 			}
 			else fe.elem.css({left:fe.x+"%",top:fe.y+"%"});
 		}
+		for(var i=bubbleEmotes.length-1;i>=0;--i) {
+			var be = bubbleEmotes[i];
+			var age = (t-be.t)*0.001;
+			var x = be.x+be.amp*Math.sin(4*age*speedmodifier+be.phase);
+			var y = be.y-age*be.vy;
+			if(age > (settings.duration+2)) {
+				be.elem.remove();
+				bubbleEmotes.splice(i,1);
+			}
+			else be.elem.css({left:x+"%",top:y+"%"});
+		}
+		
 		rafStart = t;
-		window.requestAnimationFrame(fountainStep);
+		window.requestAnimationFrame(animStep);
 	}
-	window.requestAnimationFrame(fountainStep);
+	window.requestAnimationFrame(animStep);
 
 	function handleCommand(w,data) {
 		split = data.text.toLowerCase().split(" ");
