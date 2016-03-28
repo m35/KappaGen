@@ -333,20 +333,30 @@ $(function(){
 				setTimeout(function(k) {
 					var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
 					var imgPath = emote.url;
-					var startx = Math.random()*100;
-					var starty = 100*(1+settings.size/$(window).height());
+					var centerx = Math.random()*100;
+					var starty = 50*(2-settings.size/$(window).height());
+					var phase = Math.random()*Math.PI*2;
+					var amp = 1+50*settings.size/$(window).height();
+					var startx = centerx+bubbleSway(amp,4/(settings.duration+1), 0, phase);
 					$('<img src="'+ imgPath +'" class="emote">')
-						.css({top:starty+"%",left:startx+"%",height: settings.size+"px", opacity: 1})
+						.css({top:starty+"%",left:startx+"%", height: 0, opacity: 1})
 						.load(function() {
-							$(this).show().velocity({opacity: 0},{duration: 1000*(settings.duration+1), easing:[0.65, 0, 0.69, 0.35]});
-							var vy = 75*(0.1*Math.random()+1)/(settings.duration+1);
-							var phase = Math.random()*Math.PI*2;
-							bubbleEmotes.push({elem:$(this), x: startx, y: starty, vy: vy, t: performance.now(), phase: phase, amp: 1+50*settings.size/$(window).height()});
+							$(this).show().velocity({height: (1.5*settings.size)+"px"},{duration: 300, easing:"ease-in", complete: function(f){
+								var vy = 75*(0.1*Math.random()+1)/(settings.duration+1);
+								bubbleEmotes.push({elem:$(f), x: centerx, y: starty, vy: vy, t: performance.now(), phase: phase, amp: amp});
+								$(f).velocity({height: settings.size+"px"},{duration: 100, easing:"ease-out", complete: function(g){
+									$(g).velocity({opacity: 0},{duration: 1000*(settings.duration+1), easing:[0.65, 0, 0.69, 0.35]});
+								}});
+							}});
 						})
 						.appendTo("body");
 				}, 50*settings.duration*i*settings.size/112, i);
 			}
 		}
+	}
+	
+	function bubbleSway(amp, freq, age, phaseoffset) {
+		return amp*Math.sin(freq*age+phaseoffset);
 	}
 	
 	var rafStart = Date.now();
@@ -368,7 +378,7 @@ $(function(){
 		for(var i=bubbleEmotes.length-1;i>=0;--i) {
 			var be = bubbleEmotes[i];
 			var age = (t-be.t)*0.001;
-			var x = be.x+be.amp*Math.sin(4*age*speedmodifier+be.phase);
+			var x = be.x+bubbleSway(be.amp,4*speedmodifier, age, be.phase);
 			var y = be.y-age*be.vy;
 			if(age > (settings.duration+2)) {
 				be.elem.remove();
@@ -428,11 +438,12 @@ $(function(){
 				handleCommand(w,extmsg);
 				return;
 			}
-			else if(settings.subonly && extmsg.tags.subscriber !== "1" && extmsg.tags.mod !== "1") return; // do nothing for plebs when sub only mode is active.
 			else if(extmsg.nick === "twitchnotify") {
 				if(getEmotesplosionTriggers("s"))emotesplosion();
 				return;
-			} else if(settings.once) {
+			} 
+			else if(settings.subonly && extmsg.tags.subscriber !== "1" && extmsg.tags.mod !== "1") return; // do nothing for plebs when sub only mode is active.
+			else if(settings.once) {
 				for(var i=0;i<extmsg.emoteids.length;i++) {
 					var emoteid = extmsg.emoteids[i];
 					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emoteid+"/3.0";
