@@ -21,7 +21,6 @@
 		<h1>KappaGen settings</h1>
 		<h2>General settings</h2>
 		<ul>
-			<li><md-input-container><input type="text" ng-model="settings.ch" placeholder="Channel name"></input></md-input-container></li>
 			<li>
 				<md-checkbox ng-model="settings.bttv" ng-change="onchange()">use BTTV emotes</md-checkbox>
 				<ul>
@@ -98,10 +97,13 @@
 			<li><md-button ng-click="resetSettings()" class="md-raised md-primary">Reset to default</md-button></li>
 		</ul>
 		<h2><md-checkbox ng-model="cloudsync" ng-change="onchange()">Sync settings via the cloud</md-checkbox></h2>
+		<ul>
+			<li><md-input-container><input type="text" ng-model="channel" placeholder="Channel name"></input></md-input-container></li>
+		</ul>
 		<div class="md-whiteframe-3dp layout-padding box">
 			<div flex="none">
 				Resulting URL:&nbsp; <strong id="urlres" ng-bind-html="buildUrl()"></strong>
-				<md-button ngclipboard data-clipboard-target="#urlres" class="md-icon-button btn" ng-show="settings.ch">
+				<md-button ngclipboard data-clipboard-target="#urlres" class="md-icon-button btn" ng-show="channel">
 					<md-icon class="md-primary">content_copy</md-icon>
 					<md-tooltip>Copy</md-tooltip>
 				</md-button>

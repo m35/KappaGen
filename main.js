@@ -55,7 +55,7 @@ $(function(){
 
 	log("Building settings.");
 	var params = parseQueryParams(window.location.search);
-	var channel = params.ch.toLowerCase();
+	var channel = params.channel.toLowerCase();
 	$.getJSON("https://api.frankerfacez.com/v1/room/"+channel, loadFFZChannel);
 	if(channel !== "cbenni") $.getJSON("https://api.frankerfacez.com/v1/room/cbenni", loadFFZ);
 	$.getJSON("https://api.frankerfacez.com/v1/set/global", loadFFZ);

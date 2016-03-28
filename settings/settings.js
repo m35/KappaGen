@@ -16,7 +16,6 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce){
 	var self = this;
 	var defaults = {
 		v: 2,
-		ch: "",
 		ffz: true,
 		bttv: true,
 		gif: true,
@@ -89,24 +88,24 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce){
 		if(!settings) return "";
 		var res = "";
 		if($scope.cloudsync) {
-			return 'cuid=<span class="blurry-text">'+localStorage.kappagen_cuid+'</span>'
+			return '&cuid=<span class="blurry-text">'+localStorage.kappagen_cuid+'</span>'
 		}
 		var keys = Object.keys(settings);
 		for(var i=0;i<keys.length;++i) {
 			var key = keys[i];
-			if(key[0] != "$") {
+			if(defaults[key] != undefined) {
 				var val = settings[key];
-				if(val !== defaults[key]) res += (res?"&":"")+key+(val===true?"":"="+roundIfNecessary(val));
+				if(val !== defaults[key]) res += "&"+key+(val===true?"":"="+roundIfNecessary(val));
 			}
 		}
 		return res;
 	}
 	
 	$scope.buildUrl = function buildUrl() {
-		if($scope.settings && $scope.settings.ch)
+		if($scope.settings && $scope.channel)
 		{
 			var base = /(.*)\/settings/.exec(window.location.href);
-			var res = base[1]+"?"+buildParam($scope.settings, defaults);
+			var res = base[1]+"?channel="+$scope.channel+""+buildParam($scope.settings, defaults);
 		} else {
 			var res = '<span class="error">please set a channel</span>';
 		}
