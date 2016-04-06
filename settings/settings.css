@@ -108,3 +108,7 @@ div.inline {
 .loading {
 	height: 100%;
 }
+
+div.twocolumn {
+	min-width: 300px;
+}

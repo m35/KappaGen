@@ -46,7 +46,7 @@
 				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>{{getRateLimit()}}</span></div>
 			</li>
 			<li layout="row">
-				<md-slider flex ng-model="settings.duration" min="0" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+				<md-slider flex ng-model="settings.duration" min="1" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
 				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration on screen: {{settings.duration}}s</span></div>
 			</li>
 			<li layout="row">
@@ -54,20 +54,34 @@
 				<md-option value="zoom">zoom</md-option>
 				<md-option value="bubble">bubble</md-option>
 				<md-option value="blur">blur</md-option>
-				<md-option value="hbounce">bounce (horizontal)</md-option>
-				<md-option value="vbounce">bounce (vertical)</md-option>
-				<md-option value="rbounce">bounce (random)</md-option>
+				<md-option value="bounce">bounce</md-option>
+				<md-option value="random">random</md-option>
 			</md-select></span></li>
 			<li>
-				<div layout="row">
-					<div flex="none">
-						Spawn zone:
-						<rectangle-input ng-model="settings.spawnzone" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
+				<div layout="row" layout-wrap="wrap">
+					<div flex="75" class="twocolumn" ng-show="defaults.spawnzone[settings.animation]">
+						<h4>Spawn zone:</h4>
+						<div layout="row">
+							<div flex="none">
+								<rectangle-input ng-model="settings.spawnzone[settings.animation]" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
+							</div>
+							<div flex="100" layout-padding>
+								Select an area in which emotes can spawn. Keep in mind that emotes can leave the spawn zone. <br>
+								Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
+							</div>
+						</div>
 					</div>
-					<div flex="100" layout-padding>
-						Select an area in which emotes can spawn. This is particularly useful for emotes that move across the screen (bounce and bubble), since they can leave the spawn zone. <br>
-						Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
-					</div>
+					<!--<div flex="50" class="twocolumn" ng-show="false"> disabled for now 
+						<h4>Bubble direction:</h4>
+						<div layout="row">
+							<div flex="none">
+								<direction-input ng-model="settings.direction" mode="'direction'" circle-stroke="{strokeStyle:'#000'}" arrow-stroke="{strokeStyle:'#F00',fillStyle:'#F00'}"></direction-input>
+							</div>
+							<div flex="100" layout-padding>
+								Select a direction in which emote bubbles move.
+							</div>
+						</div>
+					</div>-->
 				</div>
 			</li>
 		</ul>
@@ -94,12 +108,39 @@
 					</md-select>
 				</span></div>
 			</li>
-			<li><md-button ng-click="resetSettings()" class="md-raised md-primary">Reset to default</md-button></li>
+			<li>
+				<div layout="row" layout-wrap="wrap">
+					<div flex="50" class="twocolumn" ng-show="defaults.emotesplosionzone[settings.emotesplosiontype]">
+						<h4>Emotesplosion zone:</h4>
+						<div layout="row">
+							<div flex="none">
+								<rectangle-input ng-model="settings.emotesplosionzone[settings.emotesplosiontype]" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
+							</div>
+							<div flex="100" layout-padding>
+								Select an area in which emotesplosions can happen.<br>
+								Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
+							</div>
+						</div>
+					</div>
+					<!--<div flex="50" class="twocolumn" ng-show="false"> disabled for now
+						<h4>Emotesplosion direction:</h4>
+						<div layout="row">
+							<div flex="none">
+								<direction-input ng-model="settings.emotesplosiondir" mode="'direction'" circle-stroke="{strokeStyle:'#000'}" arrow-stroke="{strokeStyle:'#F00',fillStyle:'#F00'}"></direction-input>
+							</div>
+							<div flex="100" layout-padding>
+								Select a direction in which emotes from emotesplosions move.
+							</div>
+						</div>
+					</div>-->
+				</div>
+			</li>
 		</ul>
 		<h2><md-checkbox ng-model="cloudsync" ng-change="onchange()">Sync settings via the cloud</md-checkbox></h2>
 		<ul>
 			<li><md-input-container><input type="text" ng-model="channel" placeholder="Channel name"></input></md-input-container></li>
 		</ul>
+		<div layout-padding><md-button ng-click="resetSettings()" class="md-raised md-primary">Reset to default</md-button></div>
 		<div class="md-whiteframe-3dp layout-padding box">
 			<div flex="none">
 				Resulting URL:&nbsp; <strong id="urlres" ng-bind-html="buildUrl()"></strong>
@@ -142,6 +183,9 @@
 	
 	<script src="https://cdn.rawgit.com/zenorocha/clipboard.js/master/dist/clipboard.min.js"></script>
 	<script src="https://cdn.rawgit.com/sachinchoolur/ngclipboard/master/dist/ngclipboard.min.js"></script>
+	
+	<script src="directives.js"></script>
+	<script src="shared.js"></script>
 	
     <script src="settings.js"></script>
 	<script>

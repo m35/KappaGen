@@ -1,4 +1,4 @@
-var app = angular.module("app",["ngMaterial","firebase","ngSanitize","ngclipboard"]);
+var app = angular.module("app",["ngMaterial","firebase","ngSanitize","ngclipboard","specialInputs"]);
 
 
 function guid() {
@@ -12,35 +12,20 @@ function guid() {
   return res;
 }
 
-app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce){
+app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $window){
 	var self = this;
-	var defaults = {
-		v: 2,
-		ffz: true,
-		bttv: true,
-		gif: true,
-		mods: false,
-		size: 112,
-		
-		subonly: false,
-		chatemotes: true,
-		once: false,
-		duration: 2,
-		animation: "zoom",
-		spawnzone: "0,0,100,100",
-		limit: 0,
-		
-		emotesplosions: true,
-		emotesplosion: 400,
-		emotesplosionduration: 10,
-		emotesplosiontype: "explosion",
-		emotesplosiontriggers: "subscriber",
-		
-		cloud: true
-	};
-	
+	$scope.defaults = defaults;
 	jQuery.extend($scope.settings, defaults);
-	$scope.cloudsync = true;
+	$scope.cloudsync = localStorage.kappagen_cloudsync;
+	if($scope.cloudsync === undefined) {
+		$scope.cloudsync = true;
+		localStorage.kappagen_cloudsync = true;
+	}
+	$scope.watch("cloudsync", function(){
+		localStorage.kappagen_cloudsync = $scope.cloudsync;
+	});
+	
+	
 	$scope.loaded = false;
 	if(!localStorage.kappagen_cuid) {
 		localStorage.kappagen_cuid = guid();
@@ -136,158 +121,7 @@ function DialogController($scope, $mdDialog) {
 }
 
 
-app.directive('rectangleInput', function($document) {
-  return {
-    require: "?ngModel",
-    scope: {
-      model: '=ngModel',
-      height: '=height',
-      width: '=width',
-	  stroke: '=stroke'
-    },
-    restrict: 'E',
-    template: '<canvas width=100 height=100></canvas>',
-    link: function(scope, element, attrs, ngModel) {
-      if (!ngModel) return;
-      element.css({
-        display: "block",
-        width: scope.width,
-        height: scope.height
-      });
-      var canvas = element.children()[0];
-      var context = canvas.getContext('2d');
 
-      scope.$watch("height", function() {
-        scope.height = scope.height || 100;
-        element.css({
-          height: scope.height
-        });
-        canvas.height = scope.height;
-        redraw();
-      });
-      scope.$watch("width", function() {
-        scope.width = scope.width || 100;
-        element.css({
-          width: scope.width
-        });
-        canvas.width = scope.width;
-        redraw();
-      });
-      scope.$watch("stroke", redraw);
-
-      // Are we drawing?
-      var drawing = false;
-
-      scope.rect = {
-        x1: 0,
-        y1: 0,
-        x2: 100,
-        y2: 100
-      }
-	  
-	function clamp(val, min, max) {
-		return Math.min(Math.max(val, min), max);
-	};
-
-      element.on('mousedown', function(event) {
-        // Prevent default dragging of selected content
-        console.log("mousedown");
-        scope.rect.x1 = clamp(event.offsetX, 0, scope.width);
-        scope.rect.y1 = clamp(event.offsetY, 0, scope.height);
-        scope.rect.x2 = clamp(event.offsetX, 0, scope.width);
-        scope.rect.y2 = clamp(event.offsetY, 0, scope.height);
-        scope.onChange();
-        event.preventDefault();
-        drawing = true;
-        $document.on('mousemove', mousemove);
-        $document.on('mouseup', mouseup);
-      });
-
-      element.on("dblclick", function() {
-        drawing = false;
-        scope.rect.x1 = 0;
-        scope.rect.x2 = scope.width;
-        scope.rect.y1 = 0;
-        scope.rect.y2 = scope.height;
-        scope.onChange();
-      });
-
-      function mousemove(event) {
-        if (drawing) {
-          var offset = element.offset();
-          scope.rect.y2 = clamp(Math.round(event.pageY - offset.top), 0, scope.height);
-          scope.rect.x2 = clamp(Math.round(event.pageX - offset.left), 0, scope.width);
-          scope.onChange();
-        }
-      }
-
-      function mouseup() {
-        drawing = false;
-        $document.off('mousemove', mousemove);
-        $document.off('mouseup', mouseup);
-      }
-
-      scope.onChange = function() {
-        scope.$evalAsync(function() {
-          var modelType = typeof(scope.model);
-          if (modelType == "object") {
-            redraw();
-          } else {
-            scope.model = `${scope.rect.x1},${scope.rect.y1},${scope.rect.x2},${scope.rect.y2}`;
-          }
-        });
-      };
-
-      function redraw() {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.beginPath();
-        var lx = Math.min(scope.rect.x1, scope.rect.x2);
-        var ty = Math.min(scope.rect.y1, scope.rect.y2);
-        var rx = Math.max(scope.rect.x1, scope.rect.x2);
-        var by = Math.max(scope.rect.y1, scope.rect.y2);
-        var rh = Math.max(by - ty, 1);
-        var rw = Math.max(rx - lx, 1);
-        context.rect(lx, ty, rw, rh);
-        context.lineWidth = 1;
-        context.strokeStyle = '#fff';
-		if(scope.stroke) {
-			var strokekeys = Object.keys(scope.stroke);
-			for(var i=0;i<strokekeys.length;++i) {
-				var key = strokekeys[i];
-				context[key] = scope.stroke[key];
-			}
-		}
-        context.stroke();
-        context.closePath();
-      }
-
-      ngModel.$render = function() {
-        if (!drawing && scope.model) {
-          var modelType = typeof(scope.model);
-          if (modelType == "object") {
-            scope.rect = scope.model;
-          } else {
-            var m = scope.model.match(/\d+/g);
-            if (m && m.length == 4) {
-              var split = scope.model.split(",");
-              scope.rect.x1 = clamp(parseInt(m[0]), 0, scope.width || 100);
-              scope.rect.y1 = clamp(parseInt(m[1]), 0, scope.height || 100);
-              scope.rect.x2 = clamp(parseInt(m[2]), 0, scope.width || 100);
-              scope.rect.y2 = clamp(parseInt(m[3]), 0, scope.height || 100);
-              scope.onChange();
-            }
-          }
-        }
-        redraw();
-      }
-
-      scope.$watch("model.x1", redraw);
-      scope.$watch("model.y1", redraw);
-      scope.$watch("model.x2", redraw);
-      scope.$watch("model.y2", redraw);
-    }
-  }
-});
 
 app.directive('ratelimit', function () {
 	return {
@@ -296,10 +130,7 @@ app.directive('ratelimit', function () {
 		priority: 5,
 		link: function (scope, element, attrs, ngModel) {
 			//format text going to user (model to view)
-			console.log("formatters:",ngModel.$formatters);
 			ngModel.$formatters.push(function(val) {
-				console.log("format",val);
-				console.log("formatters:",ngModel.$formatters);
 				if(val >= 1) {
 					return Math.round(61-val);
 				} else if(val != 0) {
@@ -309,7 +140,6 @@ app.directive('ratelimit', function () {
 
 			//format text from the user (view to model)
 			ngModel.$parsers.push(function(val) {
-				console.log("parse",val);
 				if(val < 60) {
 					return (61 - val);
 				} else if(val < 120) {

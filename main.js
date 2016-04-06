@@ -2,60 +2,85 @@ function log(msg) {
 	$(".debug").prepend(msg+"<br>");
 }
 setInterval(function(){$(".debug").empty()},100000);
-$(function(){
-	log("Main starting, settings: "+JSON.stringify(settings));
-	$(window).bind('storage', function (e) {
-		if(e.originalEvent.key === "kappagen_settings") {
-			console.log("Storage changed!");
-			var newsettings = JSON.parse(localStorage.kappagen_settings);
-			var settingkeys = Object.keys(newsettings);
-			for(var i=0;i<settingkeys.length;++i) {
-				var key = settingkeys[i];
-				if(key == "ch") continue;
-				var newval = newsettings[key];
-				var oldval = settings[key];
-				settings[key] = newval;
-				if(newval != oldval && newval !== undefined) {
-					toastr.info("Set "+key+" to "+newval);
-				}
-			}
-		}
-	});
-	toastr.options = {
-		"closeButton": false,
-		"debug": false,
-		"newestOnTop": true,
-		"progressBar": false,
-		"positionClass": "toast-top-right",
-		"preventDuplicates": false,
-		"onclick": null,
-		"showDuration": "300",
-		"hideDuration": "1000",
-		"timeOut": "5000",
-		"extendedTimeOut": "1000",
-		"showEasing": "swing",
-		"hideEasing": "linear",
-		"showMethod": "fadeIn",
-		"hideMethod": "fadeOut"
-	}
 
-	var parseQueryParams = function(url) {
-		var res = {};
-		url.replace(/([^?=&]+)(?:=([^&]*))?/g,function(m, k, v){res[decodeURIComponent(k)] = v?decodeURIComponent(v):true; });
-		return res;
-	}
+function parseQueryParams(url) {
+	let res = {};
+	url.replace(/([^?=&]+)(?:=([^&]*))?/g,function(m, k, v){res[decodeURIComponent(k)] = v?decodeURIComponent(v):true; });
+	return res;
+}
 
-	var getRateLimit = function(val) {
-		if(val < 60) {
-			return 1000.0*(61 - val);
-		} else if(val < 120) {
-			return 1000.0/(val - 59);
-		} else return 0;
-	}
+function guid() {
+  function s4() { // generates 4 random lowercase alphanumeric characters
+    return Math.floor((1 + Math.random()) * 1679616) // 1679616 = 36^4 = 1000 in base 36
+      .toString(36)
+      .substring(1);
+  }
+  var res = Math.floor(10 * Math.random())+""; // first character is a digit and denotes the cluster we connect to.
+  for(var i=0;i<6;++i) res += s4();
+  return res;
+}
 
-	log("Building settings.");
+// startsWith polyfill
+if (!String.prototype.startsWith) {
+	String.prototype.startsWith = function(searchString, position){
+	  position = position || 0;
+	  return this.substr(position, searchString.length) === searchString;
+  };
+}
+
+toastr.options = {
+	"closeButton": false,
+	"debug": false,
+	"newestOnTop": true,
+	"progressBar": false,
+	"positionClass": "toast-top-right",
+	"preventDuplicates": false,
+	"onclick": null,
+	"showDuration": "300",
+	"hideDuration": "1000",
+	"timeOut": "5000",
+	"extendedTimeOut": "1000",
+	"showEasing": "swing",
+	"hideEasing": "linear",
+	"showMethod": "fadeIn",
+	"hideMethod": "fadeOut"
+}
+
+var app = angular.module("app",["firebase"]);
+
+app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
+	$scope.loaded = false;
 	var params = parseQueryParams(window.location.search);
 	var channel = params.channel.toLowerCase();
+	
+	var settingsLoaded = function() {
+		
+	}
+	
+	if(params.cuid) {
+		var cluster = params.cuid.substring(0,1);
+		console.log("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
+		var ref = new Firebase("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
+		var syncObject = $firebaseObject(ref);
+		syncObject.$bindTo($scope, "settings");
+		
+		syncObject.$loaded().then(function(data) {
+			if(data.v === undefined) {
+				$scope.settings = jQuery.extend({},defaults);
+			}
+			$scope.loaded = true;
+			let defaultkeys = Object.keys(defaults);
+			for(let i=0;i<defaultkeys.length;++i) {
+				var key = defaultkeys[i];
+				if($scope.settings[key] === undefined) $scope.settings[key] = defaults[key];
+			}
+			settingsLoaded();
+		});
+	} else {
+		$scope.settings = jQuery.extend(jQuery.extend({},defaults),params);
+		settingsLoaded();
+	}
+	
 	$.getJSON("https://api.frankerfacez.com/v1/room/"+channel, loadFFZChannel);
 	if(channel !== "cbenni") $.getJSON("https://api.frankerfacez.com/v1/room/cbenni", loadFFZ);
 	$.getJSON("https://api.frankerfacez.com/v1/set/global", loadFFZ);
@@ -68,9 +93,9 @@ $(function(){
 		jsonp: "callback",
 		dataType: "jsonp",
 		success: function( response ) {
-			var emotes = response.emoticons;
-			for(var i=0;i<emotes.length;++i) {
-				var emote = emotes[i];
+			let emotes = response.emoticons;
+			for(let i=0;i<emotes.length;++i) {
+				let emote = emotes[i];
 				if(emote.state === "active") {
 					subemotes.sub.push({type:"sub",url:"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0"});
 				}
@@ -78,89 +103,6 @@ $(function(){
 		}
 	});
 	
-	
-	log("Emotes loaded.");
-
-	var defaults = {
-		v: 1,
-		ffz: true,
-		bttv: true,
-		gif: true,
-		once: false,
-		mods: false,
-		subonly: false,
-		emotesplosion: 400,
-		emotesplosiontype: "explosion",
-		emotesplosiontriggers: "s",
-		size: 112,
-		max: 120,
-		duration: 2
-	}
-	var settings = jQuery.extend({}, defaults);
-	
-	var getEmotesplosionTriggers = function(type) {
-		var triggers = settings.emotesplosiontriggers.split("+");
-		for(var i=0;i<triggers.length;++i){
-			if(triggers[i][0] === type) return true;
-		}
-		return false;
-	}
-
-	var paramkeys = Object.keys(params);
-	if(localStorage.kappagen_lastURL !== window.location.href || !localStorage.kappagen_settings) {
-		localStorage.kappagen_lastURL = window.location.href;
-		for(var i=0;i<paramkeys.length;++i) {
-			var key = paramkeys[i];
-			var val = params[key];
-			if(typeof val === "string") val = val.toLowerCase();
-			setSetting(key, val);
-		}
-	} else {
-		settings = jQuery.extend(settings, JSON.parse(localStorage.kappagen_settings));
-	}
-
-	// updating "anim" to "gif"
-	if(settings.anim !== undefined) {
-		if(settings.gif === undefined) settings.gif = settings.anim;
-		delete settings.anim;
-		localStorage.kappagen_settings = JSON.stringify(settings);
-	}
-	
-	log("Settings built:" + JSON.stringify(settings));
-
-	function setSetting(key, val) {
-		if(key === "ch") return;
-		if(settings[key] === undefined) {
-			toastr.error("Invalid setting "+key);
-			return;
-		}
-		if(key === "size" || key === "max" || key === "v" || key === "emotesplosion") {
-			val = parseInt(val);
-			if(isNaN(val)) {
-				toastr.error("Invalid value '"+val+"' for integer setting "+key);
-				return;
-			}
-		}
-		else if(key === "duration") {
-			val = parseFloat(val);
-			if(isNaN(val)) {
-				toastr.error("Invalid value '"+val+"' for floating point setting "+key);
-				return;
-			}
-		}
-		else if(key === "emotesplosiontriggers" || key === "emotesplosiontype") { /* nothing to change */ }
-		else if(val === "true" || val === "on" || val === true) val = true;
-		else if(val === "false" || val === "off" || val === false) val = false;
-		else {
-			toastr.error("Invalid value '"+val+"' for boolean setting "+key);
-			return;
-		}
-		
-		settings[key] = val;
-		localStorage.kappagen_settings = JSON.stringify(settings);
-		return val;
-	}
-
 	$.ajax({
 		url: "http://api.twitch.tv/api/channels/"+channel+"/chat_properties",
 		jsonp: "callback",
@@ -183,8 +125,12 @@ $(function(){
 			}
 		}
 	});
+	
 	var userAccounts = {};
-	var lastSent = {}
+	var lastSent = {};
+	
+	var animatedemotes = [];
+	
 	function addUserAccount(user, time) {
 		var d = Date.now();
 		userAccounts[user] = Math.max(0,(lastSent[user]-d+userAccounts[user]) || 0)+time;
@@ -194,23 +140,90 @@ $(function(){
 		return Math.max(0,(lastSent[user]-Date.now()+userAccounts[user]) || 0);
 	}
 
+	var animationkeys = [];
 	function drawEmote(user, imgPath) {
 		log("drawing emote "+imgPath);
 		if(getUserAccount(user)<1000) {
-			var ratelimit = getRateLimit(settings.max);
+			let ratelimit = getRateLimit(settings.max);
 			if(ratelimit != 0)addUserAccount(user, ratelimit+1); // +1 to account for execution time, preventing limit violations.
-			$('<img src="'+ imgPath +'" class="emote" style="height: '+settings.size+'px">')
-				.css({top:(Math.random()*100)+"%",left:(Math.random()*100)+"%"})
-				.load(function() {
-					$(this)
-						.show()
-						.velocity({translateX: "-50%", translateY: "-50%", scale:0},{duration: 0})
-						.velocity({translateX: "-50%", translateY: "-50%", scale: 1},{duration: 250*Math.max(1,settings.duration)})
-						.velocity({translateX: "-50%", translateY: "-50%", scale:0},{delay:1000*settings.duration,duration: 250*Math.max(1,settings.duration),complete:function(e){$(e).remove();}});
-				})
-				.appendTo("body");
+			
+			var animationparams = initializers[settings.animation]($scope.settings);
+			let img = new Image();
+			img.onload = function() {
+				animatedemotes.push({url: imgPath, animation: animationparams, start: performance.now(), img: this, w: this.width, h: this.height});
+			}
+			img.src = imgPath;
 		}
 	}
+	
+	function sawTooth(x){return 1-Math.abs(2*x-1)}
+	
+	var canvas = $("#emoteScreen")[0];
+	var ctx = canvas.getContext('2d');
+	
+	var getEmotesplosionTriggers = function(type) {
+		var triggers = settings.emotesplosiontriggers.split("+");
+		for(var i=0;i<triggers.length;++i){
+			if(triggers[i][0] === type) return true;
+		}
+		return false;
+	}
+	
+	
+	function setSetting(key, val) {
+		if(defaults[key] === undefined) {
+			toastr.error("Invalid setting "+key);
+			return;
+		} else {
+			var type = typeof(defaults[key]);
+			if(type === "number") {
+				val = parseFloat(val);
+				if(isNaN(val)) {
+					toastr.error("Invalid value '"+val+"' for integer setting "+key);
+					return;
+				}
+			} else if(type === "boolean") {
+				if(val === "true" || val === "on" || val === true) val = true;
+				else if(val === "false" || val === "off" || val === false) val = false;
+				else {
+					toastr.error("Invalid value '"+val+"' for boolean setting "+key);
+					return;
+				}
+			}
+		}
+		
+		settings[key] = val;
+		return val;
+	}
+	
+	var rafStart = performance.now();
+	function animStep(t){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+		let f = t - rafStart;
+		for(var i=animatedemotes.length-1;i>=0;--i) {
+			let emote = animatedemotes[i];
+			let speedmult = 1/(1000.0*emote.animation.duration);
+			let age = (t-emote.start)*speedmult;
+			if(age >= 0) {
+				animations[emote.animation.type](ctx, f*speedmult,age,emote);
+				if(age > 1) {
+					emotes.splice(j,1);
+					if(emote.oncomplete) emote.oncomplete.call(emote);
+				}
+			}
+		}
+		
+		rafStart = t;
+		window.requestAnimationFrame(animStep);
+	}
+	window.requestAnimationFrame(animStep);
+	
+	window.addEventListener('resize', resizeCanvas, false);
+    function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
 	
 	function emotesplosion(allowedEmotes) {
 		if(allowedEmotes === undefined) {
@@ -223,165 +236,6 @@ $(function(){
 		emotesplosiontypes[settings.emotesplosiontype](allowedEmotes);
 	}
 	
-	
-	var fountainEmotes = [];
-	var bubbleEmotes = [];
-	
-	var emotesplosiontypes = {
-		random: function(allowedEmotes) {
-			var esk = Object.keys(emotesplosiontypes);
-			emotesplosiontypes[esk[Math.floor(Math.random()*esk.length)]](allowedEmotes);
-		},
-		explosion: function (allowedEmotes) {
-			var seed = Math.floor(Math.random()*allowedEmotes.length);
-			var startx = Math.random()*100;
-			var starty = Math.random()*100;
-			for(var i=0;i<settings.emotesplosion;++i) {
-				setTimeout(function(k) {
-					var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
-					var imgPath = emote.url;
-					$('<img src="'+ imgPath +'" class="emote">')
-						.css({top:starty+"%",left:startx+"%",height: "0px"})
-						.load(function() {
-							var vx = Math.random()-0.5;
-							var vy = Math.random()-0.5;
-							var v = 1/Math.sqrt(vx*vx+vy*vy);
-							vx *= v;
-							vy *= v;
-							$(this)
-								.show()
-								.velocity({top: (50+100*vy)+"%", left: (50+100*vx)+"%", height: settings.size*1.5},
-									{duration: 2000*(settings.duration+1),complete:function(e){$(e).remove()}, easing:[0.215, 0.61, 0.355, 1]});
-						})
-						.appendTo("body");
-				}, 5*settings.duration*i, i);
-			}
-		},
-	
-		firework: function (allowedEmotes) {
-			var seed = Math.floor(Math.random()*allowedEmotes.length);
-			var startx = Math.random()*50+25;
-			var starty = Math.random()*50+10;
-			
-			
-			var sparks = [];
-			
-			for(var i=1;i<settings.emotesplosion;++i) {
-				var emote = allowedEmotes[(i+seed)%allowedEmotes.length];
-				var imgPath = emote.url;
-				sparks.push($('<img src="'+ imgPath +'" class="emote">')
-					.css({top:starty+"%",left:startx+"%","height":settings.size})
-					.appendTo("body"));
-			}
-			
-			var startemote = allowedEmotes[seed];
-			var startemoteImgPath = startemote.url;
-			$('<img src="'+ startemoteImgPath +'" class="emote">')
-				.css({top:"100%",left:"50%","height":0})
-				.load(function() {
-					$(this)
-						.show()
-						.velocity({top: starty+"%", left: startx+"%", height: settings.size},
-							{duration: 200*(settings.duration+1), easing: "linear", complete:function(e){
-								$(e).remove();
-								for(var i=0;i<sparks.length;++i) {
-									setTimeout(function(k) {
-										var v = Math.random();
-										var vx = Math.random()-0.5;
-										var vy = Math.random()-0.5;
-										var nv = v/Math.sqrt(vx*vx+vy*vy);
-										vx *= nv;
-										vy *= nv;
-										sparks[k]
-											.show()
-											.velocity({top: (starty+100*vy)+"%", left: (startx+100*vx)+"%", opacity: 0, height: 0},
-												{duration: 800*(settings.duration+1), easing: [0.215, 0.61, 0.355, 1],complete:function(f){$(f).remove()}})
-									}, 1, i);
-								}
-							}});
-				})
-				.appendTo("body");
-		},
-		
-		fountain: function (allowedEmotes) {
-			var seed = Math.floor(Math.random()*allowedEmotes.length);
-			var startx = 50;
-			var starty = 100;
-			for(var i=0;i<settings.emotesplosion;++i) {
-				setTimeout(function(k) {
-					var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
-					var imgPath = emote.url;
-					$('<img src="'+ imgPath +'" class="emote">')
-						.css({top:starty+"%",left:startx+"%",height: "0px"})
-						.load(function() {
-							$(this).show().velocity({height: settings.size},{duration: 1000*settings.duration, easing:[0.215, 0.61, 0.355, 1]});
-							var vx = (Math.random()-0.5)*2;
-							var vy = (Math.random()+1.5);
-							var nv = (Math.random()+1)/(2*Math.sqrt(vx*vx+vy*vy)*(settings.duration+1));
-							vx *= nv*100;
-							vy *= nv*300;
-							fountainEmotes.push({elem:$(this), x: startx, y: starty, vx: vx, vy: vy, v0: vy});
-						})
-						.appendTo("body");
-				}, 10*settings.duration*i*settings.size/112, i);
-			}
-		},
-		
-		bubbles: function (allowedEmotes) {
-			var seed = Math.floor(Math.random()*allowedEmotes.length);
-			for(var i=0;i<settings.emotesplosion;++i) {
-				setTimeout(function(k) {
-					var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
-					var imgPath = emote.url;
-					var startx = Math.random()*100;
-					var starty = 100*(1+settings.size/$(window).height());
-					$('<img src="'+ imgPath +'" class="emote">')
-						.css({top:starty+"%",left:startx+"%",height: settings.size+"px", opacity: 1})
-						.load(function() {
-							$(this).show().velocity({opacity: 0},{duration: 1000*(settings.duration+1), easing:[0.65, 0, 0.69, 0.35]});
-							var vy = 75*(0.1*Math.random()+1)/(settings.duration+1);
-							var phase = Math.random()*Math.PI*2;
-							bubbleEmotes.push({elem:$(this), x: startx, y: starty, vy: vy, t: performance.now(), phase: phase, amp: 1+50*settings.size/$(window).height()});
-						})
-						.appendTo("body");
-				}, 50*settings.duration*i*settings.size/112, i);
-			}
-		}
-	}
-	
-	var rafStart = Date.now();
-	function animStep(t){
-		var f = (t - rafStart)/1000.0;
-		var speedmodifier = 1/(settings.duration+1);
-		var speedmodifiersq = speedmodifier*speedmodifier;
-		for(var i=fountainEmotes.length-1;i>=0;--i) {
-			var fe = fountainEmotes[i];
-			fe.x += fe.vx*f;
-			fe.vy -= 600*speedmodifiersq*f;
-			fe.y -= fe.vy*f;
-			if(fe.y > 120) {
-				fe.elem.remove();
-				fountainEmotes.splice(i,1);
-			}
-			else fe.elem.css({left:fe.x+"%",top:fe.y+"%"});
-		}
-		for(var i=bubbleEmotes.length-1;i>=0;--i) {
-			var be = bubbleEmotes[i];
-			var age = (t-be.t)*0.001;
-			var x = be.x+be.amp*Math.sin(4*age*speedmodifier+be.phase);
-			var y = be.y-age*be.vy;
-			if(age > (settings.duration+2)) {
-				be.elem.remove();
-				bubbleEmotes.splice(i,1);
-			}
-			else be.elem.css({left:x+"%",top:y+"%"});
-		}
-		
-		rafStart = t;
-		window.requestAnimationFrame(animStep);
-	}
-	window.requestAnimationFrame(animStep);
-
 	function handleCommand(w,data) {
 		split = data.text.toLowerCase().split(" ");
 		if(split.length >= 2 && (data.nick === channel || data.nick === "cbenni" || data.nick === "onslaught" || settings.mods && data.tags.mod === "1")) {
@@ -409,13 +263,9 @@ $(function(){
 			}
 		}
 	}
-	// startsWith polyfill
-	if (!String.prototype.startsWith) {
-		String.prototype.startsWith = function(searchString, position){
-		  position = position || 0;
-		  return this.substr(position, searchString.length) === searchString;
-	  };
-	}
+	
+	
+
 
 	function handleMessage(w,data) {
 		var parsedmessage = parseIRCMessage(data);
@@ -492,96 +342,7 @@ $(function(){
 		});
 	}
 		
-	var rx = /^(?:@([^ ]+) )?(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/;
-	var rx2 = /([^=;]+)=([^;]*)/g;
-	var rx3 = /\r\n|\r|\n/;
-	var STATE_V3 = 1;
-	var STATE_PREFIX = 2;
-	var STATE_COMMAND = 3;
-	var STATE_PARAM = 4;
-	var STATE_TRAILING = 5;
-	function parseIRCMessage(message) {
-		var data = rx.exec(message);
-		var tagdata = data[STATE_V3];
-		if (tagdata) {
-			var tags = {};
-			do {
-				m = rx2.exec(tagdata);
-				if (m) {
-					tags[m[1]] = m[2];
-				}
-			} while (m);
-			data[STATE_V3] = tags;
-		}
-		return data;
-	}
-
-	function splitWithTail(str,delim,count){
-		var parts = str.split(delim);
-		var tail = parts.slice(count).join(delim);
-		var result = parts.slice(0,count);
-		result.push(tail);
-		return result;
-	}
-
-	function getPrivmsgInfo(parsedmessage) {
-		var tags = parsedmessage[STATE_V3];
-		
-		var nick = parsedmessage[STATE_PREFIX].match(/(\w+)/)[1]
-		var channel = parsedmessage[STATE_PARAM][0]
-		var badges = []
-		// moderation badge
-		if(nick == channel.substring(1)) {
-			badges.push("broadcaster");
-		}
-		else if(tags && tags["user-type"] != "") {
-			badges.push(tags["user-type"]);
-		}
-		if(tags && tags["subscriber"]=="1") {
-			badges.push("subscriber")
-		}
-		if(tags && tags["turbo"]=="1") {
-			badges.push("turbo")
-		}
-		
-		var text = parsedmessage[STATE_TRAILING];
-		var isaction = false;
-		var actionmatch = /^\u0001ACTION (.*)\u0001$/.exec(text);
-		if(actionmatch != null) {
-			isaction = true;
-			text = actionmatch[1];
-		}
-		
-		var emotes = [];
-		var emoteids = [];
-		if(tags && tags["emotes"] != "") {
-			var emotelists = tags["emotes"].split("/");
-			for(var i=0;i<emotelists.length;i++) {
-				var emoteidpositions = emotelists[i].split(":")
-				var emoteid = emoteidpositions[0];
-				emoteids.push(emoteid);
-				var positions = emoteidpositions[1].split(",");
-				for(var j=0;j<positions.length;j++) {
-					var startend = positions[j].split("-");
-					var start = parseInt(startend[0]);
-					var end = parseInt(startend[1]);
-					
-					emotes.push({"start":start,"end":end,"id":emoteid,"name":text.substring(start,end+1)});
-				}
-			}
-		}
-		
-		return {
-			"tags": tags,
-			"nick": nick,
-			"badges": badges,
-			"channel": channel,
-			"text": text,
-			"isaction": isaction,
-			"emotes": emotes,
-			"emoteids": emoteids
-		}
-	}
+	
 	
 	// follows
 	var lastfollowers = undefined;
@@ -600,7 +361,7 @@ $(function(){
 				success:function (data) {
 					if(data.follows.length>0)
 					{
-						var newestfollower = data.follows[0].user.name;
+						let newestfollower = data.follows[0].user.name;
 						if(lastfollowers === undefined) lastfollowers=[newestfollower];
 						if(lastfollowers.indexOf(newestfollower)<0)
 						{
