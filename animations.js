@@ -147,7 +147,7 @@ emotesplosions = {
 		var esk = Object.keys(emotesplosiontypes);
 		emotesplosiontypes[esk[Math.floor(Math.random()*esk.length)]](allowedEmotes);
 	},
-	explosion: function (allowedEmotes) {
+	explosion: function (settings, allowedEmotes, animatedemotes) {
 		let pos = getSpawn(settings.emotesplosionzone["firework"]);
 		let fdx = Math.max(pos[0], $(document).width()-pos[0]);
 		let fdy = Math.max(pos[1], $(document).height()-pos[1]);
@@ -189,7 +189,7 @@ emotesplosions = {
 		}
 		
 		
-		emoteImage = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
+		emote = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
 		let projap = {
 			type: "fireworkrocket",
 			x: $(document).width()/2, 
@@ -256,25 +256,30 @@ emotesplosions = {
 		}
 	},
 	
-	bubbles: function (allowedEmotes) {
-		// TODO: bubbles!
-		var seed = Math.floor(Math.random()*allowedEmotes.length);
+	bubbles: function (settings, allowedEmotes, animatedemotes) {
 		for(var i=0;i<settings.emotesplosion;++i) {
-			setTimeout(function(k) {
-				var emote = allowedEmotes[(k+seed)%allowedEmotes.length];
-				var imgPath = emote.url;
-				var startx = Math.random()*100;
-				var starty = 100*(1+settings.size/$(window).height());
-				$('<img src="'+ imgPath +'" class="emote">')
-					.css({top:starty+"%",left:startx+"%",height: settings.size+"px", opacity: 1})
-					.load(function() {
-						$(this).show().velocity({opacity: 0},{duration: 1000*(settings.duration+1), easing:[0.65, 0, 0.69, 0.35]});
-						var vy = 75*(0.1*Math.random()+1)/(settings.duration+1);
-						var phase = Math.random()*Math.PI*2;
-						bubbleEmotes.push({elem:$(this), x: startx, y: starty, vy: vy, t: performance.now(), phase: phase, amp: 1+50*settings.size/$(window).height()});
-					})
-					.appendTo("body");
-			}, 50*settings.duration*i*settings.size/112, i);
+			var pos = getSpawn(settings.emotesplosionzone["bubbles"]);
+			let ap = {
+				type: type, 
+				x: pos[0], y: pos[1], 
+				duration: settings.duration,
+				vy: 0.5*$(document).height()*(1+Math.random()),
+				amp: settings.size*(1+Math.random())*0.75,
+				freq: 2*Math.PI*(1+Math.random()),
+				phase: Math.random()*Math.PI*2
+			}
+			let emote = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
+			let img = new Image();
+			img.onload = function() {
+				animatedemotes.push({
+					url: emote.url, 
+					animation: ap, 
+					start: performance.now()+i*settings.emotesplosionduration*1000/settings.emotesplosion, 
+					img: this, 
+					w: this.width, h: this.height
+				});
+			}
+			img.src = emote.url;
 		}
 	}
 }
