@@ -88,19 +88,24 @@
 		<h2><md-checkbox ng-model="settings.emotesplosions" ng-change="onchange()">Emotesplosions (follower/subscriber alerts)</md-checkbox></h2>
 		<ul ng-show="settings.emotesplosions">
 			<li layout="row">
+				<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.emotesplosiontype" ng-change="onchange()" class="inlineselect">
+					<md-option value="explosion">explosion</md-option>
+					<md-option value="firework">firework</md-option>
+					<md-option value="fountain">fountain</md-option>
+					<md-option value="bubbles">bubbles</md-option>
+					<md-option value="random">random</md-option>
+				</md-select></span>
+			</li>
+			<li layout="row">
 				<md-slider flex ng-model="settings.emotesplosionduration" min="0" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
 				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration: {{settings.emotesplosionduration}}s</span></div>
 			</li>
 			<li layout="row">
+			</li>
+			<li layout="row">
 				<md-slider flex ng-model="settings.emotesplosion" min="1" max="1000" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>Emote 
-					<md-select ng-model="settings.emotesplosiontype" ng-change="onchange()" class="inlineselect">
-						<md-option value="explosion">explosion</md-option>
-						<md-option value="firework">firework</md-option>
-						<md-option value="fountain">fountain</md-option>
-						<md-option value="bubbles">bubbles</md-option>
-						<md-option value="random">random</md-option>
-					</md-select> ({{settings.emotesplosion}} random sub<span ng-if="settings.ffz">+ffz</span><span ng-if="settings.bttv">+bttv</span><span ng-if="settings.bttv && settings.gif">+gif</span> emote<span ng-if="settings.emotesplosion!=1">s</span> from this channel) when someone 
+				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>Emote count 
+					 ({{settings.emotesplosion}} random sub<span ng-if="settings.ffz">+ffz</span><span ng-if="settings.bttv">+bttv</span><span ng-if="settings.bttv && settings.gif">+gif</span> emote<span ng-if="settings.emotesplosion!=1">s</span> from this channel) when someone 
 					<md-select ng-model="settings.emotesplosiontriggers" ng-change="onchange()" class="inlineselect">
 						<md-option value="follower">follows</md-option>
 						<md-option value="subscriber">subscribes</md-option>

@@ -53,10 +53,41 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	var params = parseQueryParams(window.location.search);
 	var channel = params.channel.toLowerCase();
 	
-	var settingsLoaded = function() {
-		
+	// follows
+	var lastfollowers = undefined;
+	function updateFollows()
+	{
+		if(getEmotesplosionTriggers("f")) {
+			$.ajax({
+				url: "https://api.twitch.tv/kraken/channels/"+channel+"/follows",
+				type: 'GET',
+				crossDomain: true,
+				dataType: 'jsonp',
+				jsonp: 'callback',
+				data: { 
+					limit: "1"
+				}, 
+				success:function (data) {
+					if(data.follows.length>0)
+					{
+						let newestfollower = data.follows[0].user.name;
+						if(lastfollowers === undefined) lastfollowers=[newestfollower];
+						if(lastfollowers.indexOf(newestfollower)<0)
+						{
+							emotesplosion();
+							lastfollowers.push(newestfollower)
+						}
+					}
+					else if(lastfollowers === undefined) lastfollowers = [];
+				}
+			});
+		}
 	}
 	
+	var settingsLoaded = function() {
+		updateFollows(channel);
+		setInterval(updateFollows,10000);
+	}
 	if(params.cuid) {
 		var cluster = params.cuid.substring(0,1);
 		console.log("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
@@ -144,10 +175,10 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	function drawEmote(user, imgPath) {
 		log("drawing emote "+imgPath);
 		if(getUserAccount(user)<1000) {
-			let ratelimit = getRateLimit(settings.max);
+			let ratelimit = $scope.settings.limit;
 			if(ratelimit != 0)addUserAccount(user, ratelimit+1); // +1 to account for execution time, preventing limit violations.
 			
-			var animationparams = initializers[settings.animation]($scope.settings);
+			var animationparams = initializers[$scope.settings.animation](ctx, $scope.settings);
 			let img = new Image();
 			img.onload = function() {
 				animatedemotes.push({url: imgPath, animation: animationparams, start: performance.now(), img: this, w: this.width, h: this.height});
@@ -156,13 +187,11 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 		}
 	}
 	
-	function sawTooth(x){return 1-Math.abs(2*x-1)}
-	
 	var canvas = $("#emoteScreen")[0];
 	var ctx = canvas.getContext('2d');
 	
 	var getEmotesplosionTriggers = function(type) {
-		var triggers = settings.emotesplosiontriggers.split("+");
+		var triggers = $scope.settings.emotesplosiontriggers.split("+");
 		for(var i=0;i<triggers.length;++i){
 			if(triggers[i][0] === type) return true;
 		}
@@ -191,8 +220,8 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				}
 			}
 		}
+		$scope.$apply(function(){$scope.settings[key] = val});
 		
-		settings[key] = val;
 		return val;
 	}
 	
@@ -205,9 +234,9 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 			let speedmult = 1/(1000.0*emote.animation.duration);
 			let age = (t-emote.start)*speedmult;
 			if(age >= 0) {
-				animations[emote.animation.type](ctx, f*speedmult,age,emote);
+				animations[emote.animation.type](ctx, $scope.settings, f*speedmult, age, emote);
 				if(age > 1) {
-					emotes.splice(j,1);
+					animatedemotes.splice(i,1);
 					if(emote.oncomplete) emote.oncomplete.call(emote);
 				}
 			}
@@ -229,16 +258,16 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 		if(allowedEmotes === undefined) {
 			allowedEmotes = [];
 			for(var i=0;i<subemotes.sub.length;++i) allowedEmotes.push(subemotes.sub[i]);
-			if(settings.bttv) for(var i=0;i<subemotes.bttv.length;++i) allowedEmotes.push(subemotes.bttv[i]);
-			if(settings.bttv && settings.gif) for(var i=0;i<subemotes.gif.length;++i) allowedEmotes.push(subemotes.gif[i]);
-			if(settings.ffz) for(var i=0;i<subemotes.ffz.length;++i) allowedEmotes.push(subemotes.ffz[i]);
+			if($scope.settings.bttv) for(var i=0;i<subemotes.bttv.length;++i) allowedEmotes.push(subemotes.bttv[i]);
+			if($scope.settings.bttv && $scope.settings.gif) for(var i=0;i<subemotes.gif.length;++i) allowedEmotes.push(subemotes.gif[i]);
+			if($scope.settings.ffz) for(var i=0;i<subemotes.ffz.length;++i) allowedEmotes.push(subemotes.ffz[i]);
 		}
-		emotesplosiontypes[settings.emotesplosiontype](allowedEmotes);
+		emotesplosions[$scope.settings.emotesplosiontype](ctx, $scope.settings, allowedEmotes, animatedemotes);
 	}
 	
 	function handleCommand(w,data) {
 		split = data.text.toLowerCase().split(" ");
-		if(split.length >= 2 && (data.nick === channel || data.nick === "cbenni" || data.nick === "onslaught" || settings.mods && data.tags.mod === "1")) {
+		if(split.length >= 2 && (data.nick === channel || data.nick === "cbenni" || data.nick === "onslaught" || $scope.settings.mods && data.tags.mod === "1")) {
 			if(split[1] == "emotesplosiontest") {
 				emotesplosion();
 			} else if(split[1] == "customsplosion") {
@@ -251,13 +280,13 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				var usplit = data.text.split(" ");
 				for(var i=2;i<usplit.length;++i) {
 					var emote = ExtraEmotes[usplit[i]];
-					if(emote !== undefined && settings[emote.type] && (emote.type != "gif" || settings.bttv)) {
+					if(emote !== undefined && $scope.settings[emote.type] && (emote.type != "gif" || $scope.settings.bttv)) {
 						allowedEmotes.push(emote);
 					}
 				}
 				emotesplosion(allowedEmotes);
 			} else if(split.length == 3) {
-				var oldval = settings[split[1]];
+				var oldval = $scope.settings[split[1]];
 				var res = setSetting(split[1],split[2]);
 				if(res !== undefined && oldval !== res) toastr.info(data.nick+" set setting "+split[1]+" from "+oldval+" to "+res);
 			}
@@ -278,11 +307,11 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				handleCommand(w,extmsg);
 				return;
 			}
-			else if(settings.subonly && extmsg.tags.subscriber !== "1" && extmsg.tags.mod !== "1") return; // do nothing for plebs when sub only mode is active.
+			else if($scope.settings.subonly && extmsg.tags.subscriber !== "1" && extmsg.tags.mod !== "1") return; // do nothing for plebs when sub only mode is active.
 			else if(extmsg.nick === "twitchnotify") {
 				if(getEmotesplosionTriggers("s"))emotesplosion();
 				return;
-			} else if(settings.once) {
+			} else if($scope.settings.once) {
 				for(var i=0;i<extmsg.emoteids.length;i++) {
 					var emoteid = extmsg.emoteids[i];
 					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emoteid+"/3.0";
@@ -299,8 +328,8 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 			var foundemotes = {};
 			$.each(parsedmessage[STATE_TRAILING].trim().split(" "), function(key,val) {
 				var emote = ExtraEmotes[this];
-				if(emote !== undefined && settings[emote.type] && (emote.type != "gif" || settings.bttv)) {
-					if(!settings.once || !foundemotes[emote]) {
+				if(emote !== undefined && $scope.settings[emote.type] && (emote.type != "gif" || $scope.settings.bttv)) {
+					if(!$scope.settings.once || !foundemotes[emote]) {
 						drawEmote(extmsg.nick, emote.url);
 						foundemotes[emote] = true;
 					}
@@ -344,37 +373,5 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 		
 	
 	
-	// follows
-	var lastfollowers = undefined;
-	function updateFollows()
-	{
-		if(getEmotesplosionTriggers("f")) {
-			$.ajax({
-				url: "https://api.twitch.tv/kraken/channels/"+channel+"/follows",
-				type: 'GET',
-				crossDomain: true,
-				dataType: 'jsonp',
-				jsonp: 'callback',
-				data: { 
-					limit: "1"
-				}, 
-				success:function (data) {
-					if(data.follows.length>0)
-					{
-						let newestfollower = data.follows[0].user.name;
-						if(lastfollowers === undefined) lastfollowers=[newestfollower];
-						if(lastfollowers.indexOf(newestfollower)<0)
-						{
-							emotesplosion();
-							lastfollowers.push(newestfollower)
-						}
-					}
-					else if(lastfollowers === undefined) lastfollowers = [];
-				}
-			});
-		}
-	}
-	updateFollows(channel);
-	setInterval(updateFollows,10000);
 
 });

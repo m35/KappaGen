@@ -21,7 +21,7 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 		$scope.cloudsync = true;
 		localStorage.kappagen_cloudsync = true;
 	}
-	$scope.watch("cloudsync", function(){
+	$scope.$watch("cloudsync", function(){
 		localStorage.kappagen_cloudsync = $scope.cloudsync;
 	});
 	
