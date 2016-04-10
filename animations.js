@@ -50,16 +50,15 @@ initializers = {
 		return ap;
 	},
 	"bounce": function(ctx, settings){
-		let ap = basicAnimationParams(ctx, settings, "bubble");
-		ap.vy = Math.random()*settings.size;
-		let dx1 = ap.x;
-		let dx2 = ctx.canvas.width-ap.x;
-		ap.vx = (dx1<dx2?-dx1:dx2);
+		let ap = basicAnimationParams(ctx, settings, "bounce");
+		ap.vy = Math.random()*settings.size-2*ap.y;
+		ap.goleft = Math.random()>0.5;
+		ap.canbounce = true;
 		return ap;
 	},
 	"random": function(ctx, settings) {
 		let animations = ["bubble","blur","zoom","bounce"];
-		return initializers[animations[Math.floor(Math.random()*animations.length)]](settings);
+		return initializers[animations[Math.floor(Math.random()*animations.length)]](ctx, settings);
 	}
 }
 
@@ -91,9 +90,9 @@ animations = {
 		let ap = emote.animation;
 		let w = emote.w * settings.size/emote.h;
 		if(age < 0.25) {
-			ctx.globalAlpha = age*4;
+			ctx.globalAlpha = clamp(age*4,0,1);
 		} else if(age > 0.75) {
-			ctx.globalAlpha = 4-age*4;
+			ctx.globalAlpha = clamp(4-age*4,0,1);
 		}
 		ctx.drawImage(emote.img, ap.x-w/2, ap.y-settings.size/2, w, settings.size);
 		ctx.globalAlpha = 1;
@@ -112,16 +111,22 @@ animations = {
 	"bounce": function(ctx, settings, frameTime, age, emote) {
 		let ap = emote.animation;
 		let sh = ctx.canvas.height;
-		let gravity = 4*sh;
+		let gravity = 20*sh;
+		let w = emote.w * settings.size/emote.h;
+		let dx1 = ap.x+w;
+		let dx2 = ctx.canvas.width-ap.x+w;
+		let vx = (ap.goleft?-dx1:dx2);
 		ap.vy += gravity*frameTime;
 		ap.y += ap.vy*frameTime;
-		ap.x += ap.vx*frameTime;
-		if((ap.y+settings.size/2) >= sh) {
-			ap.vy = -Math.abs(ap.vy);
-			ap.y = sh-settings.size/2;
+		let x = ap.x+vx*age;
+		if((ap.y+settings.size/2) >= sh && ap.canbounce) {
+			if(Math.abs(ap.vy) < (gravity*frameTime+100)) ap.canbounce = false;
+			else {
+				ap.vy = -Math.abs(ap.vy)*0.75;
+				ap.y = sh-settings.size/2;
+			}
 		}
-		let w = emote.w * settings.size/emote.h;
-		ctx.drawImage(emote.img, ap.x-w/2, ap.y-settings.size/2, w, settings.size);
+		ctx.drawImage(emote.img, x-w/2, ap.y-settings.size/2, w, settings.size);
 	},
 	"fireworkrocket": function(ctx, settings, frameTime, age, emote) {
 		let ap = emote.animation;

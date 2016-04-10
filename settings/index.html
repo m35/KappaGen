@@ -39,6 +39,15 @@
 		</ul>
 		<h2><md-checkbox ng-model="settings.chatemotes" ng-change="onchange()">Chat emotes</md-checkbox></h2>
 		<ul ng-show="settings.chatemotes">
+			<li layout="row">
+				<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.animation" ng-change="onchange()" class="inlineselect">
+					<md-option value="zoom">zoom</md-option>
+					<md-option value="bubble">bubble</md-option>
+					<md-option value="blur">blur</md-option>
+					<md-option value="bounce">bounce</md-option>
+					<md-option value="random">random</md-option>
+				</md-select></span>
+			</li>
 			<li><md-checkbox ng-model="settings.once" ng-change="onchange()">Show each emote only once per message</md-checkbox></li>
 			<li><md-checkbox ng-model="settings.subonly" ng-change="onchange()">Subscribers only</md-checkbox></li>
 			<li layout="row">
@@ -49,14 +58,6 @@
 				<md-slider flex ng-model="settings.duration" min="1" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
 				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration on screen: {{settings.duration}}s</span></div>
 			</li>
-			<li layout="row">
-			<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.animation" ng-change="onchange()" class="inlineselect">
-				<md-option value="zoom">zoom</md-option>
-				<md-option value="bubble">bubble</md-option>
-				<md-option value="blur">blur</md-option>
-				<md-option value="bounce">bounce</md-option>
-				<md-option value="random">random</md-option>
-			</md-select></span></li>
 			<li>
 				<div layout="row" layout-wrap="wrap">
 					<div flex="75" class="twocolumn" ng-show="defaults.spawnzone[settings.animation]">
