@@ -13,8 +13,8 @@ li {
 	list-style-type: none;
 }
 
-#resurl {
-	width: 100%;
+#urlres {
+	word-wrap: break-word;
 }
 
 .error {

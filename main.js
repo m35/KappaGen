@@ -52,111 +52,6 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	$scope.loaded = false;
 	var params = parseQueryParams(window.location.search);
 	var channel = params.channel.toLowerCase();
-	
-	// follows
-	var lastfollowers = undefined;
-	function updateFollows()
-	{
-		if(getEmotesplosionTriggers("f")) {
-			$.ajax({
-				url: "https://api.twitch.tv/kraken/channels/"+channel+"/follows",
-				type: 'GET',
-				crossDomain: true,
-				dataType: 'jsonp',
-				jsonp: 'callback',
-				data: { 
-					limit: "1"
-				}, 
-				success:function (data) {
-					if(data.follows.length>0)
-					{
-						let newestfollower = data.follows[0].user.name;
-						if(lastfollowers === undefined) lastfollowers=[newestfollower];
-						if(lastfollowers.indexOf(newestfollower)<0)
-						{
-							emotesplosion();
-							lastfollowers.push(newestfollower)
-						}
-					}
-					else if(lastfollowers === undefined) lastfollowers = [];
-				}
-			});
-		}
-	}
-	
-	var settingsLoaded = function() {
-		updateFollows(channel);
-		setInterval(updateFollows,10000);
-	}
-	if(params.cuid) {
-		var cluster = params.cuid.substring(0,1);
-		console.log("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
-		var ref = new Firebase("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
-		var syncObject = $firebaseObject(ref);
-		syncObject.$bindTo($scope, "settings");
-		
-		syncObject.$loaded().then(function(data) {
-			if(data.v === undefined) {
-				$scope.settings = jQuery.extend({},defaults);
-			}
-			$scope.loaded = true;
-			let defaultkeys = Object.keys(defaults);
-			for(let i=0;i<defaultkeys.length;++i) {
-				var key = defaultkeys[i];
-				if($scope.settings[key] === undefined) $scope.settings[key] = defaults[key];
-			}
-			settingsLoaded();
-		});
-	} else {
-		$scope.settings = jQuery.extend(jQuery.extend({},defaults),params);
-		settingsLoaded();
-	}
-	
-	$.getJSON("https://api.frankerfacez.com/v1/room/"+channel, loadFFZChannel);
-	if(channel !== "cbenni") $.getJSON("https://api.frankerfacez.com/v1/room/cbenni", loadFFZ);
-	$.getJSON("https://api.frankerfacez.com/v1/set/global", loadFFZ);
-	$.getJSON("https://api.betterttv.net/2/channels/"+channel, loadBTTVChannel);
-	$.getJSON("https://api.betterttv.net/2/emotes", loadBTTV);
-	
-	var subemotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};
-	$.ajax({
-		url: "http://api.twitch.tv/api/channels/"+channel+"/product",
-		jsonp: "callback",
-		dataType: "jsonp",
-		success: function( response ) {
-			let emotes = response.emoticons;
-			for(let i=0;i<emotes.length;++i) {
-				let emote = emotes[i];
-				if(emote.state === "active") {
-					subemotes.sub.push({type:"sub",url:"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0"});
-				}
-			}
-		}
-	});
-	
-	$.ajax({
-		url: "http://api.twitch.tv/api/channels/"+channel+"/chat_properties",
-		jsonp: "callback",
-		dataType: "jsonp",
-		success: function( response ) {
-			var wss = response.web_socket_servers;
-			var serverip = wss[Math.floor(Math.random() * wss.length)];
-			var w=new WebSocket('ws://'+serverip);
-			w.onmessage=function(e){
-				var lines = e.data.split("\r\n");
-				$.each(lines, function() {
-					if(this.length) handleMessage(w,this);
-				});
-			}
-		
-			w.onopen=function(e) {
-				w.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-				w.send('NICK justinfan1');
-				w.send('JOIN #'+channel);
-			}
-		}
-	});
-	
 	var userAccounts = {};
 	var lastSent = {};
 	
@@ -190,13 +85,6 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	var canvas = $("#emoteScreen")[0];
 	var ctx = canvas.getContext('2d');
 	
-	var getEmotesplosionTriggers = function(type) {
-		var triggers = $scope.settings.emotesplosiontriggers.split("+");
-		for(var i=0;i<triggers.length;++i){
-			if(triggers[i][0] === type) return true;
-		}
-		return false;
-	}
 	
 	
 	function setSetting(key, val) {
@@ -218,6 +106,8 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 					toastr.error("Invalid value '"+val+"' for boolean setting "+key);
 					return;
 				}
+			} else if(type === "object") {
+				val = JSON.parse(val);
 			}
 		}
 		$scope.$apply(function(){$scope.settings[key] = val});
@@ -245,14 +135,6 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 		rafStart = t;
 		window.requestAnimationFrame(animStep);
 	}
-	window.requestAnimationFrame(animStep);
-	
-	window.addEventListener('resize', resizeCanvas, false);
-    function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
 	
 	function emotesplosion(allowedEmotes) {
 		if(allowedEmotes === undefined) {
@@ -370,8 +252,136 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 			subemotes[emote.type].push(emote);
 		});
 	}
+	
+	
+	var getEmotesplosionTriggers = function(type) {
+		var triggers = $scope.settings.emotesplosiontriggers.split("+");
+		for(var i=0;i<triggers.length;++i){
+			if(triggers[i][0] === type) return true;
+		}
+		return false;
+	}
+	// follows
+	var lastfollowers = undefined;
+	function updateFollows()
+	{
+		if(getEmotesplosionTriggers("f")) {
+			$.ajax({
+				url: "https://api.twitch.tv/kraken/channels/"+channel+"/follows",
+				type: 'GET',
+				crossDomain: true,
+				dataType: 'jsonp',
+				jsonp: 'callback',
+				data: { 
+					limit: "1"
+				}, 
+				success:function (data) {
+					if(data.follows.length>0)
+					{
+						let newestfollower = data.follows[0].user.name;
+						if(lastfollowers === undefined) lastfollowers=[newestfollower];
+						if(lastfollowers.indexOf(newestfollower)<0)
+						{
+							emotesplosion();
+							lastfollowers.push(newestfollower)
+						}
+					}
+					else if(lastfollowers === undefined) lastfollowers = [];
+				}
+			});
+		}
+	}
 		
+	var settingsLoaded = function() {
+		updateFollows(channel);
+		setInterval(updateFollows,10000);
+	}
+	// load settings
+	if(params.cuid) {
+		var cluster = params.cuid.substring(0,1);
+		console.log("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
+		var ref = new Firebase("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
+		var syncObject = $firebaseObject(ref);
+		syncObject.$bindTo($scope, "settings");
+		
+		syncObject.$loaded().then(function(data) {
+			if(data.v === undefined) {
+				$scope.settings = jQuery.extend(true, {},defaults);
+			}
+			$scope.loaded = true;
+			let defaultkeys = Object.keys(defaults);
+			for(let i=0;i<defaultkeys.length;++i) {
+				var key = defaultkeys[i];
+				if($scope.settings[key] === undefined) $scope.settings[key] = defaults[key];
+			}
+			settingsLoaded();
+		});
+	} else {
+		$scope.settings = jQuery.extend(true, {},defaults);
+		let paramkeys = Object.keys(params);
+		for(let i=0;i<paramkeys.length;++i) {
+			let key = paramkeys[i];
+			let val = params[key];
+			if(key === "channel") continue;
+			if(val[0] == "{") $scope.settings[key] = JSON.parse(val);
+			else $scope.settings[key] = val;
+		}
+		settingsLoaded();
+	}
 	
+	// load API data
+	$.getJSON("https://api.frankerfacez.com/v1/room/"+channel, loadFFZChannel);
+	if(channel !== "cbenni") $.getJSON("https://api.frankerfacez.com/v1/room/cbenni", loadFFZ);
+	$.getJSON("https://api.frankerfacez.com/v1/set/global", loadFFZ);
+	$.getJSON("https://api.betterttv.net/2/channels/"+channel, loadBTTVChannel);
+	$.getJSON("https://api.betterttv.net/2/emotes", loadBTTV);
 	
-
+	var subemotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};
+	$.ajax({
+		url: "http://api.twitch.tv/api/channels/"+channel+"/product",
+		jsonp: "callback",
+		dataType: "jsonp",
+		success: function( response ) {
+			let emotes = response.emoticons;
+			for(let i=0;i<emotes.length;++i) {
+				let emote = emotes[i];
+				if(emote.state === "active") {
+					subemotes.sub.push({type:"sub",url:"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0"});
+				}
+			}
+		}
+	});
+	
+	$.ajax({
+		url: "http://api.twitch.tv/api/channels/"+channel+"/chat_properties",
+		jsonp: "callback",
+		dataType: "jsonp",
+		success: function( response ) {
+			var wss = response.web_socket_servers;
+			var serverip = wss[Math.floor(Math.random() * wss.length)];
+			var w=new WebSocket('ws://'+serverip);
+			w.onmessage=function(e){
+				var lines = e.data.split("\r\n");
+				$.each(lines, function() {
+					if(this.length) handleMessage(w,this);
+				});
+			}
+		
+			w.onopen=function(e) {
+				w.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+				w.send('NICK justinfan1');
+				w.send('JOIN #'+channel);
+			}
+		}
+	});
+	
+	// initialize rendering
+	window.requestAnimationFrame(animStep);
+	
+	window.addEventListener('resize', resizeCanvas, false);
+    function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
 });

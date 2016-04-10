@@ -15,39 +15,64 @@ function guid() {
 app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $window){
 	var self = this;
 	$scope.defaults = defaults;
-	jQuery.extend($scope.settings, defaults);
-	$scope.cloudsync = localStorage.kappagen_cloudsync;
-	if($scope.cloudsync === undefined) {
-		$scope.cloudsync = true;
-		localStorage.kappagen_cloudsync = true;
+	jQuery.extend(true, $scope.settings, defaults);
+	
+	// firebase stuff
+	$scope.cloudsync = localStorage.kappagen_cloudsync !== "false";
+	if(localStorage.kappagen_cloudsync === undefined) {
+		localStorage.kappagen_cloudsync = "true";
 	}
-	$scope.$watch("cloudsync", function(){
-		localStorage.kappagen_cloudsync = $scope.cloudsync;
-	});
-	
-	
 	$scope.loaded = false;
 	if(!localStorage.kappagen_cuid) {
 		localStorage.kappagen_cuid = guid();
 	}
 	var cluster = localStorage.kappagen_cuid.substring(0,1);
-	console.log("https://kappagen-"+cluster+".firebaseio.com/"+localStorage.kappagen_cuid);
-	var ref = new Firebase("https://kappagen-"+cluster+".firebaseio.com/"+localStorage.kappagen_cuid);
-	var syncObject = $firebaseObject(ref);
-	syncObject.$bindTo($scope, "settings");
+	var ref = null;
+	var syncObject = null;
 	
-	syncObject.$loaded().then(function(data) {
-		if(data.v === undefined) {
-			$scope.settings = jQuery.extend({},defaults);
+	var handleFirebase = function(){
+		if($scope.cloudsync) {
+			if(ref === null) {
+				ref = new Firebase("https://kappagen-"+cluster+".firebaseio.com/"+localStorage.kappagen_cuid);
+				syncObject = $firebaseObject(ref);
+				syncObject.$bindTo($scope, "settings");
+				
+				syncObject.$loaded().then(function(data) {
+					if(data.v === undefined) {
+						$scope.settings = jQuery.extend(true, {},defaults);
+					}
+					$scope.loaded = true;
+				});
+			} else {
+				Firebase.goOnline();
+			}
 		}
-		$scope.loaded = true;
-		//jQuery.extend($scope.settings, defaults);
+		else {
+			if($scope.loaded === false) {
+				$scope.settings = jQuery.extend(true, {},defaults);
+				$scope.loaded = true;
+			}
+			else {
+				Firebase.goOffline();
+			}
+		}
+	}
+	
+	
+	
+	handleFirebase();
+	$scope.$watch("cloudsync", function(){
+		localStorage.kappagen_cloudsync = $scope.cloudsync;
+		handleFirebase();
 	});
+	
+	
+	
 	
 	$scope.resulturl = "";
 	
 	$scope.resetSettings = function() {
-		$scope.settings = jQuery.extend({}, defaults);
+		$scope.settings = jQuery.extend(true, {}, defaults);
 	}
 	
 	$scope.getRateLimit = function() {
@@ -80,7 +105,14 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 			var key = keys[i];
 			if(defaults[key] != undefined) {
 				var val = settings[key];
-				if(val !== defaults[key]) res += "&"+key+(val===true?"":"="+roundIfNecessary(val));
+				var df = defaults[key];
+				if(typeof val==="object") {
+					val = encodeURIComponent(JSON.stringify(val));
+					df = encodeURIComponent(JSON.stringify(df));
+				}
+				if(val !== df) {
+					res += "&"+key+(val===true?"":"="+roundIfNecessary(val));
+				}
 			}
 		}
 		return res;

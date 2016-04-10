@@ -76,9 +76,15 @@ animations = {
 		let ap = emote.animation;
 		let x = ap.x + Math.sin(ap.phase + age * ap.freq) * ap.amp;
 		let y = ap.y + ap.vy * age;
-		let w = emote.w * settings.size/emote.h;
+		let h = settings.size;
+		if(age < 0.10) {
+			h *= age*12;
+		} else if(age < 0.125) {
+			h *= 1.2-(age-0.1)*8;
+		}
+		let w = emote.w * h/emote.h;
 		if(age > 0.75) ctx.globalAlpha = clamp(4-4*age,0,1);
-		ctx.drawImage(emote.img, x-w/2, y-settings.size/2, w, settings.size);
+		ctx.drawImage(emote.img, x-w/2, y-h/2, w, h);
 		ctx.globalAlpha = 1;
 	},
 	"blur": function(ctx, settings, frameTime, age, emote) {
