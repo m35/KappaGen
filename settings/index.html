@@ -158,7 +158,7 @@
 			<div ng-show="cloudsync">Do not show the link (especially the blurred ID) to anyone you do not trust! It can be used to modify your settings!</div>
 			<div>Add a CLR-Browser to your global scenes and set it to show that page. <span ng-hide="cloudsync">You have to copy the link <strong>every time you change a setting!</strong></span><br>Alternatively, use these chat commands:</div>
 			<ul>
-				<li ng-repeat="(key, val) in settings" ng-if="key != 'v' && key != 'ch'"><code>!kappagen {{key}} {{val}}</code></li>
+				<li ng-repeat="(key, val) in settings | filter:relevantCommands" ng-if="key != 'v' && key != 'ch' && val != defaults[key] && (typeof(defaults[key]) != 'object')"><code>!kappagen {{key}} {{val}}</code></li>
 			</ul>
 			<span>And some commands to test your emotesplosions:</span>
 			<ul>

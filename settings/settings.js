@@ -30,6 +30,8 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 	var ref = null;
 	var syncObject = null;
 	
+	$scope.typeof = function(x){return typeof(x);};
+	
 	var handleFirebase = function(){
 		if($scope.cloudsync) {
 			if(ref === null) {
