@@ -4,7 +4,7 @@ function log(msg) {
 setInterval(function(){$(".debug").empty()},100000);
 
 function parseQueryParams(url) {
-	let res = {};
+	var res = {};
 	url.replace(/([^?=&]+)(?:=([^&]*))?/g,function(m, k, v){res[decodeURIComponent(k)] = v?decodeURIComponent(v):true; });
 	return res;
 }
@@ -68,13 +68,14 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 
 	var animationkeys = [];
 	function drawEmote(user, imgPath) {
-		log("drawing emote "+imgPath);
-		if(getUserAccount(user)<1000) {
-			let ratelimit = $scope.settings.limit;
-			if(ratelimit != 0)addUserAccount(user, ratelimit+1); // +1 to account for execution time, preventing limit violations.
+		if($scope.settings.chatemotes && getUserAccount(user)<1000) {
+			console.log("User account for "+user+": "+getUserAccount(user))
+			var ratelimit = 1000*$scope.settings.limit;
+			if(ratelimit != 0)addUserAccount(user, ratelimit+10); // +10 to account for execution time, preventing limit violations.
 			
 			var animationparams = initializers[$scope.settings.animation](ctx, $scope.settings);
-			let img = new Image();
+			log("drawing emote "+imgPath);
+			var img = new Image();
 			img.onload = function() {
 				animatedemotes.push({url: imgPath, animation: animationparams, start: performance.now(), img: this, w: this.width, h: this.height});
 			}
@@ -118,11 +119,11 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	var rafStart = performance.now();
 	function animStep(t){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-		let f = t - rafStart;
+		var f = t - rafStart;
 		for(var i=animatedemotes.length-1;i>=0;--i) {
-			let emote = animatedemotes[i];
-			let speedmult = 1/(1000.0*emote.animation.duration);
-			let age = (t-emote.start)*speedmult;
+			var emote = animatedemotes[i];
+			var speedmult = 1/(1000.0*emote.animation.duration);
+			var age = (t-emote.start)*speedmult;
 			if(age >= 0) {
 				animations[emote.animation.type](ctx, $scope.settings, f*speedmult, age, emote);
 				if(age > 1) {
@@ -139,10 +140,13 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	function emotesplosion(allowedEmotes) {
 		if(allowedEmotes === undefined) {
 			allowedEmotes = [];
-			for(var i=0;i<subemotes.sub.length;++i) allowedEmotes.push(subemotes.sub[i]);
-			if($scope.settings.bttv) for(var i=0;i<subemotes.bttv.length;++i) allowedEmotes.push(subemotes.bttv[i]);
-			if($scope.settings.bttv && $scope.settings.gif) for(var i=0;i<subemotes.gif.length;++i) allowedEmotes.push(subemotes.gif[i]);
-			if($scope.settings.ffz) for(var i=0;i<subemotes.ffz.length;++i) allowedEmotes.push(subemotes.ffz[i]);
+			for(var i=0;i<subEmotes.sub.length;++i) allowedEmotes.push(subEmotes.sub[i]);
+			if($scope.settings.bttv) for(var i=0;i<subEmotes.bttv.length;++i) allowedEmotes.push(subEmotes.bttv[i]);
+			if($scope.settings.bttv && $scope.settings.gif) for(var i=0;i<subEmotes.gif.length;++i) allowedEmotes.push(subEmotes.gif[i]);
+			if($scope.settings.ffz) for(var i=0;i<subEmotes.ffz.length;++i) allowedEmotes.push(subEmotes.ffz[i]);
+		}
+		if(allowedEmotes.length == 0) {
+			allowedEmotes = globalEmotes;
 		}
 		emotesplosions[$scope.settings.emotesplosiontype](ctx, $scope.settings, allowedEmotes, animatedemotes);
 	}
@@ -161,7 +165,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				}
 				var usplit = data.text.split(" ");
 				for(var i=2;i<usplit.length;++i) {
-					var emote = ExtraEmotes[usplit[i]];
+					var emote = extraEmotes[usplit[i]];
 					if(emote !== undefined && $scope.settings[emote.type] && (emote.type != "gif" || $scope.settings.bttv)) {
 						allowedEmotes.push(emote);
 					}
@@ -181,7 +185,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	function handleMessage(w,data) {
 		var parsedmessage = parseIRCMessage(data);
 		log(data);
-		console.log(data);
+		console.log(""+data);
 		if(parsedmessage[STATE_COMMAND] == "PING") w.send('PONG');
 		else if (parsedmessage[STATE_COMMAND]=="PRIVMSG") {
 			var extmsg = getPrivmsgInfo(parsedmessage);
@@ -209,7 +213,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 			}
 			var foundemotes = {};
 			$.each(parsedmessage[STATE_TRAILING].trim().split(" "), function(key,val) {
-				var emote = ExtraEmotes[this];
+				var emote = extraEmotes[this];
 				if(emote !== undefined && $scope.settings[emote.type] && (emote.type != "gif" || $scope.settings.bttv)) {
 					if(!$scope.settings.once || !foundemotes[emote]) {
 						drawEmote(extmsg.nick, emote.url);
@@ -221,12 +225,12 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	}
 
 
-	ExtraEmotes = {};
+	extraEmotes = {};
 	function loadFFZ(data, xhr) {
 		$.each(data.sets, function(){
 			$.each(this.emoticons, function(){
 				var x = this.urls;
-				ExtraEmotes[this.name] = {"url":"https://"+ (x[4] || x[2] || x[1]), "type": "ffz"};
+				extraEmotes[this.name] = {"url":"https://"+ (x[4] || x[2] || x[1]), "type": "ffz"};
 			});
 		});
 	}
@@ -235,21 +239,28 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 			$.each(this.emoticons, function(){
 				var x = this.urls;
 				var emote = {"url":"https://"+ (x[4] || x[2] || x[1]), "type": "ffz"};
-				ExtraEmotes[this.name] = emote;
-				subemotes["ffz"].push(emote);
+				extraEmotes[this.name] = emote;
+				subEmotes["ffz"].push(emote);
 			});
 		});
 	}
 	function loadBTTV(data, xhr) {
 		$.each(data.emotes, function(){
-			ExtraEmotes[this.code] = {"url":data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: this.imageType == "gif"?"gif":"bttv"};
+			extraEmotes[this.code] = {"url":data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: this.imageType == "gif"?"gif":"bttv"};
 		});
 	}
 	function loadBTTVChannel(data, xhr) {
 		$.each(data.emotes, function(){
 			var emote = {"url":data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: this.imageType == "gif"?"gif":"bttv"};
-			ExtraEmotes[this.code] = emote;
-			subemotes[emote.type].push(emote);
+			extraEmotes[this.code] = emote;
+			subEmotes[emote.type].push(emote);
+		});
+	}
+	var globalEmotes = [];
+	function loadGlobalEmotes(data, xhr) {
+		$.each(data.emoticon_sets[0], function(){
+			var emote = {"url":"http://static-cdn.jtvnw.net/emoticons/v1/"+this.id+"/3.0", type: this.imageType == "global"};
+			globalEmotes.push(emote);
 		});
 	}
 	
@@ -278,7 +289,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				success:function (data) {
 					if(data.follows.length>0)
 					{
-						let newestfollower = data.follows[0].user.name;
+						var newestfollower = data.follows[0].user.name;
 						if(lastfollowers === undefined) lastfollowers=[newestfollower];
 						if(lastfollowers.indexOf(newestfollower)<0)
 						{
@@ -309,8 +320,8 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				$scope.settings = jQuery.extend(true, {},defaults);
 			}
 			$scope.loaded = true;
-			let defaultkeys = Object.keys(defaults);
-			for(let i=0;i<defaultkeys.length;++i) {
+			var defaultkeys = Object.keys(defaults);
+			for(var i=0;i<defaultkeys.length;++i) {
 				var key = defaultkeys[i];
 				if($scope.settings[key] === undefined) $scope.settings[key] = defaults[key];
 			}
@@ -318,10 +329,10 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 		});
 	} else {
 		$scope.settings = jQuery.extend(true, {},defaults);
-		let paramkeys = Object.keys(params);
-		for(let i=0;i<paramkeys.length;++i) {
-			let key = paramkeys[i];
-			let val = params[key];
+		var paramkeys = Object.keys(params);
+		for(var i=0;i<paramkeys.length;++i) {
+			var key = paramkeys[i];
+			var val = params[key];
 			if(key === "channel") continue;
 			if(val[0] == "{") $scope.settings[key] = JSON.parse(val);
 			else $scope.settings[key] = val;
@@ -335,18 +346,19 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	$.getJSON("https://api.frankerfacez.com/v1/set/global", loadFFZ);
 	$.getJSON("https://api.betterttv.net/2/channels/"+channel, loadBTTVChannel);
 	$.getJSON("https://api.betterttv.net/2/emotes", loadBTTV);
+	$.getJSON("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0", loadGlobalEmotes);
 	
-	var subemotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};
+	var subEmotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};
 	$.ajax({
 		url: "http://api.twitch.tv/api/channels/"+channel+"/product",
 		jsonp: "callback",
 		dataType: "jsonp",
 		success: function( response ) {
-			let emotes = response.emoticons;
-			for(let i=0;i<emotes.length;++i) {
-				let emote = emotes[i];
+			var emotes = response.emoticons;
+			for(var i=0;i<emotes.length;++i) {
+				var emote = emotes[i];
 				if(emote.state === "active") {
-					subemotes.sub.push({type:"sub",url:"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0"});
+					subEmotes.sub.push({type:"sub",url:"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0"});
 				}
 			}
 		}

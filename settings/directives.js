@@ -202,11 +202,11 @@ angular.module("specialInputs", [])
 			element.on('mousedown', function(event) {
 				// Prevent default dragging of selected content
 				console.log("mousedown");
-				let x = event.offsetX / scope.radius - 1;
-				let y = event.offsetY / scope.radius - 1;
-				let lensq = x * x + y * y;
+				var x = event.offsetX / scope.radius - 1;
+				var y = event.offsetY / scope.radius - 1;
+				var lensq = x * x + y * y;
 				if (scope.mode === undefined || scope.mode == "direction" || (scope.mode == "velocity" && lensq > 1)) {
-					let len = 1 / (Math.sqrt(lensq));
+					var len = 1 / (Math.sqrt(lensq));
 					x *= len;
 					y *= len;
 				}
@@ -222,11 +222,11 @@ angular.module("specialInputs", [])
 			function mousemove(event) {
 				if (drawing) {
 					var offset = element.offset();
-					let x = (event.pageX - offset.left) / scope.radius - 1;
-					let y = (event.pageY - offset.top) / scope.radius - 1;
-					let lensq = x * x + y * y;
+					var x = (event.pageX - offset.left) / scope.radius - 1;
+					var y = (event.pageY - offset.top) / scope.radius - 1;
+					var lensq = x * x + y * y;
 					if (scope.mode === undefined || scope.mode == "direction" || (scope.mode == "velocity" && lensq > 1)) {
-						let len = 1 / (Math.sqrt(lensq));
+						var len = 1 / (Math.sqrt(lensq));
 						x *= len;
 						y *= len;
 					}
@@ -248,8 +248,8 @@ angular.module("specialInputs", [])
 					if (modelType == "object") {
 						redraw();
 					} else {
-						let x = Math.round(scope.dir.x*1000)/1000;
-						let y = Math.round(scope.dir.y*1000)/1000;
+						var x = Math.round(scope.dir.x*1000)/1000;
+						var y = Math.round(scope.dir.y*1000)/1000;
 						if(Math.abs(x)==1) y = 0;
 						if(Math.abs(y)==1) x = 0;
 						scope.model = `${x},${y}`;
@@ -279,8 +279,8 @@ angular.module("specialInputs", [])
 				context.save();
 				context.beginPath();
 				context.moveTo(canvas.width / 2, canvas.height / 2);
-				let arrowx = canvas.width / 2 + scope.dir.x * scope.radius;
-				let arrowy = canvas.height / 2 + scope.dir.y * scope.radius;
+				var arrowx = canvas.width / 2 + scope.dir.x * scope.radius;
+				var arrowy = canvas.height / 2 + scope.dir.y * scope.radius;
 				context.lineTo(arrowx, arrowy);
 				context.lineWidth = 1;
 				context.strokeStyle = '#000';

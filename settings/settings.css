@@ -43,6 +43,13 @@ li {
 	background-color: white;
 }
 
+.header {
+	top: 0px;
+	width: 100%;
+	background-color: #ffff99;
+	padding: 8px;
+}
+
 h1, h2, h3 {
 	margin: 0;
 }
