@@ -192,18 +192,18 @@ emotesplosions = {
 			vx *= nf;
 			vy *= nf;
 			var ap = {"type": "explosion", x: pos[0], y: pos[1], vx: vx, vy: vy, duration: settings.duration, id: i}
-			var img = new Image();
+			var img = new ImageEx(emote.url, emote.type == "gif");
 			img.onload = function(that) { 
 				return function() {
 					animatedemotes.push({
 						animation: that, 
-						img: this, 
-						w: this.width, h: this.height, 
+						img: this,
+						type: emote.type,
+						w: this.width, h: this.height,
 						start: performance.now()+that.id*settings.emotesplosionduration*1000/settings.emotesplosion
 					});
 				}
 			}(ap);
-			img.src = emote.url;
 		}
 	},
 
@@ -228,13 +228,12 @@ emotesplosions = {
 			
 			var ap = {"type": "fireworkspark", x: pos[0], y: pos[1], vx: vx, vy: vy, duration: 0.8*settings.emotesplosionduration, id: i}
 			
-			var img = new Image();
+			var img = new ImageEx(emote.url, emote.type == "gif");
 			img.onload = function(that) { 
 				return function() {
-					sparks.push({url: this.src, animation: that, img: this, w: this.width, h: this.height});
+					sparks.push({url: this.src, animation: that, img: this, w: this.width, h: this.height, type: emote.type});
 				}
 			}(ap);
-			img.src = emote.url;
 		}
 		
 		
@@ -249,12 +248,13 @@ emotesplosions = {
 			sparks: sparks,
 			id: -1
 		};
-		var img = new Image();
+		var img = new ImageEx(emote.url, emote.type == "gif");
 		img.onload = function() {
 			animatedemotes.push({
 				animation: projap, 
 				start: performance.now(), 
-				img: this, 
+				img: this,
+				type: emote.type,
 				w: this.width, h: this.height,
 				oncomplete: function() {
 					for(var i=0;i<this.animation.sparks.length;++i) {
@@ -264,7 +264,6 @@ emotesplosions = {
 				}
 			});
 		}
-		img.src = emote.url;
 	},
 	
 	fountain: function (ctx, settings, allowedEmotes, animatedemotes) {
@@ -290,20 +289,19 @@ emotesplosions = {
 				duration: settings.duration,
 				id: i
 			}
-			var img = new Image();
 			var emote = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
-			img.onload = 
+			var img = new ImageEx(emote.url, emote.type == "gif");
 			img.onload = function(that) { 
 				return function() {
 					animatedemotes.push({
 						animation: that, 
 						start: performance.now()+that.id*settings.emotesplosionduration*1000/settings.emotesplosion,
-						img: this, 
+						img: this,
+						type: emote.type,
 						w: this.width, h: this.height
 					});
 				}
 			}(ap);
-			img.src = emote.url;
 		}
 	},
 	
@@ -321,18 +319,18 @@ emotesplosions = {
 				id: i
 			}
 			var emote = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
-			var img = new Image();
+			var img = new ImageEx(emote.url, emote.type == "gif");
 			img.onload = function(that) { 
 				return function() {
 					animatedemotes.push({
 						animation: that, 
 						start: performance.now()+that.id*settings.emotesplosionduration*1000/settings.emotesplosion, 
-						img: this, 
+						img: this,
+						type: emote.type,
 						w: this.width, h: this.height
 					});
 				}
 			}(ap);
-			img.src = emote.url;
 		}
 	}
 }

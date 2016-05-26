@@ -1,3 +1,5 @@
+var CORSProvider = "//beta.cbenni.com/cors-proxy/]http:";
+
 function log(msg) {
 	$(".debug").prepend(msg+"<br>");
 }
@@ -67,19 +69,17 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	}
 
 	var animationkeys = [];
-	function drawEmote(user, imgPath) {
+	function drawEmote(user, emote) {
 		if($scope.settings.chatemotes && getUserAccount(user)<1000) {
 			console.log("User account for "+user+": "+getUserAccount(user))
 			var ratelimit = 1000*$scope.settings.limit;
 			if(ratelimit != 0)addUserAccount(user, ratelimit+10); // +10 to account for execution time, preventing limit violations.
 			
 			var animationparams = initializers[$scope.settings.animation](ctx, $scope.settings);
-			log("drawing emote "+imgPath);
-			var img = new Image();
+			var img = new ImageEx(emote.url, emote.type == "gif");
 			img.onload = function() {
-				animatedemotes.push({url: imgPath, animation: animationparams, start: performance.now(), img: this, w: this.width, h: this.height});
+				animatedemotes.push({url: emote.url, animation: animationparams, start: performance.now(), img: this, w: this.width, h: this.height, type: emote.type});
 			}
-			img.src = imgPath;
 		}
 	}
 	
@@ -201,14 +201,14 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				for(var i=0;i<extmsg.emoteids.length;i++) {
 					var emoteid = extmsg.emoteids[i];
 					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emoteid+"/3.0";
-					drawEmote(extmsg.nick, imgPath);
+					drawEmote(extmsg.nick, {url: imgPath, type: "twitch"});
 				}
 			} else {
 				for(var i=0;i<extmsg.emotes.length;i++) {
 					var emote = extmsg.emotes[i];
 					log("drawing emote with id "+emote.id);
 					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0";
-					drawEmote(extmsg.nick, imgPath);
+					drawEmote(extmsg.nick, {url: imgPath, type: "twitch"});
 				}
 			}
 			var foundemotes = {};
@@ -216,7 +216,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				var emote = extraEmotes[this];
 				if(emote !== undefined && $scope.settings[emote.type] && (emote.type != "gif" || $scope.settings.bttv)) {
 					if(!$scope.settings.once || !foundemotes[emote]) {
-						drawEmote(extmsg.nick, emote.url);
+						drawEmote(extmsg.nick, emote);
 						foundemotes[emote] = true;
 					}
 				}
@@ -246,12 +246,23 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	}
 	function loadBTTV(data, xhr) {
 		$.each(data.emotes, function(){
-			extraEmotes[this.code] = {"url":data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: this.imageType == "gif"?"gif":"bttv"};
+			if(this.imageType == "gif") {
+				var emote = {"url": CORSProvider + data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: "gif"};
+				new ImageEx(emote.url, true);
+			} else {
+				var emote = {"url": data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: "bttv"};
+			}
+			extraEmotes[this.code] = emote;
 		});
 	}
 	function loadBTTVChannel(data, xhr) {
 		$.each(data.emotes, function(){
-			var emote = {"url":data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: this.imageType == "gif"?"gif":"bttv"};
+			if(this.imageType == "gif") {
+				var emote = {"url": CORSProvider + data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: "gif"};
+				new ImageEx(emote.url, true);
+			} else {
+				var emote = {"url": data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: "bttv"};
+			}
 			extraEmotes[this.code] = emote;
 			subEmotes[emote.type].push(emote);
 		});
