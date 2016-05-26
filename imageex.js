@@ -74,7 +74,7 @@ var ImageEx = function(src, isAnim) {
 					tmpcanvas.height = decoder.height;
 					var tmpctx = tmpcanvas.getContext("2d");
 					// render the imagedata to the temp canvas
-					var imagedata = new ImageData(decoder.width, decoder.height);
+					var imagedata = tmpctx.createImageData(decoder.width, decoder.height);
 					decoder.decodeAndBlitFrameRGBA(i, imagedata.data); // Decode 0th frame
 					tmpctx.putImageData(imagedata, 0, 0);
 					
@@ -93,14 +93,15 @@ var ImageEx = function(src, isAnim) {
 					// build the frame info
 					var frameinfo = decoder.frameInfo(i);
 					frameinfo.offset = offset;
+					if(frameinfo.delay <= 1) frameinfo.delay = 10;
 					frameinfo.delay *= 10; // turn the delay into ms (usually cs)
 					offset += frameinfo.delay;
 					frameinfo.end = offset;
 					frameinfo.img = tmpimg;
 					self.frameInfos.push(frameinfo);
 					
-					// the next frame overdraws if this frame has a dispose that is not equal to 2
-					overdraws = frameinfo.disposal != 2;
+					// the next frame overdraws if this frame has a dispose that is equal to 1
+					overdraws = frameinfo.disposal == 1;
 				}
 				self.totalLength = offset;
 				_imageCache[src] = { width: self.width, height: self.height, totalLength: self.totalLength, frameInfos: self.frameInfos };
