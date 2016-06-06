@@ -23,12 +23,27 @@
 		.debug {
 			color: RGBA(0,0,0,0);
 		}
+		#emoteScreen {
+			position: absolute;
+			top: 0;
+			left: 0;
+			display:block;
+		}
 		</style>
 	</head>
-	<body>
+	<body ng-app="app" ng-controller="AppCtrl as ctrl">
 	<span class="debug">Debug log.</span>
+	<canvas id="emoteScreen"></canvas>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+	<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
+	<script src="https://cdn.firebase.com/libs/angularfire/1.1.4/angularfire.min.js"></script>
+	<script src="GIF.min.js"></script>
+	
+	<script src="settings/shared.js"></script>
+	<script src="imageex.js"></script>
+	<script src="messageparser.js"></script>
+	<script src="animations.js"></script>
 	<script src="main.js"></script>
-
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

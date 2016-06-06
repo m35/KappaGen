@@ -7,113 +7,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>KappaGen2 Settings</title>
     
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css">
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
 	<link href='https://fonts.googleapis.com/css?family=Open+Sans:700' rel='stylesheet' type='text/css'>
-    <style>
-		html, body {
-			margin: 0;
-			height: 90%;
-			box-sizing: border-box;
-		}
-		.content {
-			width: 80%;
-			margin: 0 auto;
-			padding-top: 20px;
-		}
-		
-		li {
-			list-style-type: none;
-		}
-		
-		#resurl {
-			width: 100%;
-		}
-		
-		.error {
-			color: red;
-		}
-		
-		@media(max-width: 1000px) {
-			.content {
-				width: 100%;
-			}
-			img.kappapride {
-				display: none;
-			}
-		}
-		
-		.sliderval {
-			min-width: 300px;
-			width: 50%;
-			position: relative;
-		}
-		
-		.footer {
-			position: fixed;
-			bottom: 0px;
-			width: 100%;
-			background-color: white;
-		}
-		
-		h1, h2, h3 {
-			margin: 0;
-		}
-		
-		img.kappapride {
-			position: absolute;
-			right: 0;
-			bottom: 10px;
-			padding: 0;
-		}
-		
-		.footer img {
-			padding: 0;
-			height: 20px;
-			vertical-align: middle;
-		}
-		
-		a, a:visited, a:hover, a:active {
-			text-decoration: none;
-			color: #66757f;
-			font-weight: bold;
-			font-family: 'Open Sans', sans-serif;
-		}
-		
-		.box {
-			margin-bottom: 5px;
-		}
-		
-		.content > :last-child {
-			margin-bottom: 50px;
-		}
-		
-		md-select.inlineselect {
-			margin: 0;
-			display: inline-block;
-		}
-		
-		.rightbutton {
-			float: right;
-			margin: 0;
-			padding 0;
-		}
-		
-		.closedialog {
-			margin: auto;
-			display: block;
-		}
-		
-		div.inline {
-			display: inline-block;
-		}
-	</style>
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link href='settings.css' rel='stylesheet' type='text/css'>
   </head>
 
   <body ng-app="app" ng-controller="AppCtrl as ctrl">
-    <div class="content">
+	<div class="header">The KappaGen beta has ended! Thanks for your feedback!&emsp; <md-button class="md-raised md-primary smallbutton" ng-click="importSettings($event)">Import beta settings</md-button></div>
+	<div ng-hide="loaded" class="loading" layout="row" layout-align="center center">
+		<div flex="none"><md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...</div>
+	</div>
+    <div class="content ng-cloak" ng-show="loaded">
 		<h1>KappaGen settings</h1>
+		<h2>General settings</h2>
 		<ul>
-			<li><md-input-container><input type="text" ng-model="settings.ch" placeholder="Channel name"></input></md-input-container></li>
 			<li>
 				<md-checkbox ng-model="settings.bttv" ng-change="onchange()">use BTTV emotes</md-checkbox>
 				<ul>
@@ -121,17 +29,7 @@
 				</ul>
 			</li>
 			<li><md-checkbox ng-model="settings.ffz" ng-change="onchange()">use FFZ emotes</md-checkbox></li>
-			<li><md-checkbox ng-model="settings.once" ng-change="onchange()">Show each emote only once per message</md-checkbox></li>
 			<li><md-checkbox ng-model="settings.mods" ng-change="onchange()">Allow chat moderators to use chat commands</md-checkbox></li>
-			<li><md-checkbox ng-model="settings.subonly" ng-change="onchange()">Subscribers only</md-checkbox></li>
-			<li layout="row">
-				<md-slider flex ng-model="settings.max" min="1" max="120" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>{{getRateLimit()}}</span></div>
-			</li>
-			<li layout="row">
-				<md-slider flex ng-model="settings.duration" min="0" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration on screen: {{settings.duration}}s</span></div>
-			</li>
 			<li layout="row">
 				<md-slider flex ng-model="settings.size" min="12" max="255" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
 				<div class="sliderval" flex="none" layout-padding layout-align="center center">
@@ -139,32 +37,129 @@
 					<img src="https://static-cdn.jtvnw.net/emoticons/v1/55338/3.0" style="height: {{settings.size}}px;" class="kappapride">
 				</div>
 			</li>
+		</ul>
+		<h2><md-checkbox ng-model="settings.chatemotes" ng-change="onchange()">Chat emotes</md-checkbox></h2>
+		<ul ng-show="settings.chatemotes">
 			<li layout="row">
-				<md-slider flex ng-model="settings.emotesplosion" min="0" max="1000" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>Emote 
-					<md-select ng-model="settings.emotesplosiontype" ng-change="onchange()" class="inlineselect">
-						<md-option value="explosion">explosion</md-option>
-						<md-option value="firework">firework</md-option>
-						<md-option value="fountain">fountain</md-option>
-						<md-option value="bubbles">bubbles</md-option>
-						<md-option value="random">random</md-option>
-					</md-select> <span ng-if="settings.emotesplosion>0">({{settings.emotesplosion}} random sub<span ng-if="settings.ffz">+ffz</span><span ng-if="settings.bttv">+bttv</span><span ng-if="settings.bttv && settings.gif">+gif</span> emote<span ng-if="settings.emotesplosion!=1">s</span> from this channel) when someone 
+				<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.animation" ng-change="onchange()" class="inlineselect">
+					<md-option value="zoom">zoom</md-option>
+					<md-option value="bubble">bubble</md-option>
+					<md-option value="blur">blur</md-option>
+					<md-option value="bounce">bounce</md-option>
+					<md-option value="random">random</md-option>
+				</md-select></span>
+			</li>
+			<li><md-checkbox ng-model="settings.once" ng-change="onchange()">Show each emote only once per message</md-checkbox></li>
+			<li><md-checkbox ng-model="settings.subonly" ng-change="onchange()">Subscribers only</md-checkbox></li>
+			<li layout="row">
+				<md-slider flex ng-model="settings.limit" ratelimit min="1" max="120" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>{{getRateLimit()}}</span></div>
+			</li>
+			<li layout="row">
+				<md-slider flex ng-model="settings.duration" min="1" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration on screen: {{settings.duration}}s</span></div>
+			</li>
+			<li>
+				<div layout="row" layout-wrap="wrap">
+					<div flex="75" class="twocolumn" ng-show="defaults.spawnzone[settings.animation]">
+						<h4>Spawn zone:</h4>
+						<div layout="row">
+							<div flex="none">
+								<rectangle-input ng-model="settings.spawnzone[settings.animation]" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
+							</div>
+							<div flex="100" layout-padding>
+								Select an area in which emotes can spawn. Keep in mind that emotes can leave the spawn zone. <br>
+								Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
+							</div>
+						</div>
+					</div>
+					<!--<div flex="50" class="twocolumn" ng-show="false"> disabled for now 
+						<h4>Bubble direction:</h4>
+						<div layout="row">
+							<div flex="none">
+								<direction-input ng-model="settings.direction" mode="'direction'" circle-stroke="{strokeStyle:'#000'}" arrow-stroke="{strokeStyle:'#F00',fillStyle:'#F00'}"></direction-input>
+							</div>
+							<div flex="100" layout-padding>
+								Select a direction in which emote bubbles move.
+							</div>
+						</div>
+					</div>-->
+				</div>
+			</li>
+		</ul>
+		<h2><md-checkbox ng-model="settings.emotesplosions" ng-change="onchange()">Emotesplosions (follower/subscriber alerts)</md-checkbox></h2>
+		<ul ng-show="settings.emotesplosions">
+			<li layout="row">
+				<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.emotesplosiontype" ng-change="onchange()" class="inlineselect">
+					<md-option value="explosion">explosion</md-option>
+					<md-option value="firework">firework</md-option>
+					<md-option value="fountain">fountain</md-option>
+					<md-option value="bubbles">bubbles</md-option>
+					<md-option value="random">random</md-option>
+				</md-select></span>
+			</li>
+			<li layout="row">
+				<md-slider flex ng-model="settings.emotesplosionduration" min="0" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration: {{settings.emotesplosionduration}}s</span></div>
+			</li>
+			<li layout="row">
+			</li>
+			<li layout="row">
+				<md-slider flex ng-model="settings.emotesplosion" min="1" max="1000" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>Emote count 
+					 ({{settings.emotesplosion}} random sub<span ng-if="settings.ffz">+ffz</span><span ng-if="settings.bttv">+bttv</span><span ng-if="settings.bttv && settings.gif">+gif</span> emote<span ng-if="settings.emotesplosion!=1">s</span> from this channel) when someone 
 					<md-select ng-model="settings.emotesplosiontriggers" ng-change="onchange()" class="inlineselect">
 						<md-option value="follower">follows</md-option>
 						<md-option value="subscriber">subscribes</md-option>
 						<md-option value="follower+subscriber">follows or subscribes</md-option>
 					</md-select>
-				</span><span ng-if="settings.emotesplosion==0">disabled</span></span></div>
+				</span></div>
 			</li>
-			<li><md-button ng-click="resetSettings()" class="md-raised md-primary">Reset to default</md-button></li>
+			<li>
+				<div layout="row" layout-wrap="wrap">
+					<div flex="50" class="twocolumn" ng-show="defaults.emotesplosionzone[settings.emotesplosiontype]">
+						<h4>Emotesplosion zone:</h4>
+						<div layout="row">
+							<div flex="none">
+								<rectangle-input ng-model="settings.emotesplosionzone[settings.emotesplosiontype]" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
+							</div>
+							<div flex="100" layout-padding>
+								Select an area in which emotesplosions can happen.<br>
+								Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
+							</div>
+						</div>
+					</div>
+					<!--<div flex="50" class="twocolumn" ng-show="false"> disabled for now
+						<h4>Emotesplosion direction:</h4>
+						<div layout="row">
+							<div flex="none">
+								<direction-input ng-model="settings.emotesplosiondir" mode="'direction'" circle-stroke="{strokeStyle:'#000'}" arrow-stroke="{strokeStyle:'#F00',fillStyle:'#F00'}"></direction-input>
+							</div>
+							<div flex="100" layout-padding>
+								Select a direction in which emotes from emotesplosions move.
+							</div>
+						</div>
+					</div>-->
+				</div>
+			</li>
 		</ul>
+		<h2><md-checkbox ng-model="cloudsync" ng-change="onchange()">Sync settings via the cloud</md-checkbox></h2>
+		<ul>
+			<li><md-input-container><input type="text" ng-model="channel" placeholder="Channel name"></input></md-input-container></li>
+		</ul>
+		<div layout-padding><md-button ng-click="resetSettings()" class="md-raised md-primary">Reset to default</md-button></div>
 		<div class="md-whiteframe-3dp layout-padding box">
-			<div layout="row">
-				<div flex="none">Resulting URL:&nbsp;</div> <div flex ng-class="{error: !settings.ch}"><strong id="urlres">{{buildUrl()}}</strong></div>
+			<div flex="none">
+				Resulting URL:&nbsp; <strong id="urlres" ng-bind-html="buildUrl()"></strong>
+				<md-button ngclipboard data-clipboard-target="#urlres" class="md-icon-button btn" ng-show="channel">
+					<md-icon class="md-primary">content_copy</md-icon>
+					<md-tooltip>Copy</md-tooltip>
+				</md-button>
 			</div>
-			<div>Add a CLR-Browser to your global scenes and set it to show that page. You have to copy the link <strong>every time you change a setting!</strong><br>Alternatively, use these chat commands:</div>
+			<div ng-show="cloudsync">Do not show the link (especially the blurred ID) to anyone you do not trust! It can be used to modify your settings!</div>
+			<div>Add a CLR-Browser to your global scenes and set it to show that page. <span ng-hide="cloudsync">You have to copy the link <strong>every time you change a setting!</strong></span><br>Alternatively, use these chat commands:</div>
 			<ul>
-				<li ng-repeat="(key, val) in settings" ng-if="key != 'v' && key != 'ch'"><code>!kappagen {{key}} {{val}}</code></li>
+				<li ng-repeat="(key, val) in settings" ng-if="key != 'v' && key != 'ch' && val != defaults[key] && (typeof(defaults[key]) != 'object')"><code>!kappagen {{key}} {{val}}</code></li>
 			</ul>
 			<span>And some commands to test your emotesplosions:</span>
 			<ul>
@@ -181,133 +176,25 @@
 	</div>
     
   	<script src="https://code.jquery.com/jquery.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-sanitize.min.js"></script>
 
 	<!-- Angular Material Library -->
-	<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
 	
+	<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
+	<script src="https://cdn.firebase.com/libs/angularfire/1.1.4/angularfire.min.js"></script>
 	
-    <script>
-	var app = angular.module("app",["ngMaterial"]);
+	<script src="https://cdn.rawgit.com/zenorocha/clipboard.js/master/dist/clipboard.min.js"></script>
+	<script src="https://cdn.rawgit.com/sachinchoolur/ngclipboard/master/dist/ngclipboard.min.js"></script>
 	
-	function buildParam(settings, defaults) {
-		var res = "";
-		var keys = Object.keys(settings);
-		for(var i=0;i<keys.length;++i) {
-			var key = keys[i];
-			var val = settings[key];
-			if(val !== defaults[key]) res += (res?"&":"")+key+(val===true?"":"="+val);
-		}
-		return res;
-	}
-
-	app.controller("AppCtrl",function($scope, $mdDialog){
-		var self = this;
-		var defaults = {
-			v: 1,
-			ch: "",
-			ffz: true,
-			bttv: true,
-			gif: true,
-			once: false,
-			mods: false,
-			subonly: false,
-			emotesplosion: 400,
-			emotesplosiontype: "explosion",
-			emotesplosiontriggers: "subscriber",
-			size: 112,
-			max: 120,
-			duration: 2
-		};
-		$scope.onchange = function() {
-			localStorage.kappagen_settings = JSON.stringify($scope.settings);
-		}
-		if(localStorage.kappagen_settings !== undefined) {
-			$scope.settings = jQuery.extend(jQuery.extend({}, defaults),JSON.parse(localStorage.kappagen_settings));
-			if($scope.settings.anim !== undefined) {
-				if($scope.settings.gif === undefined) $scope.settings.gif = $scope.settings.anim;
-				delete $scope.settings.anim;
-				localStorage.kappagen_settings = JSON.stringify($scope.settings);
-			}
-		} else {
-			$scope.settings = jQuery.extend({}, defaults);
-			$scope.onchange();
-		}
-		$scope.resulturl = "";
-		
-		
-		
-		$scope.resetSettings = function() {
-			$scope.settings = jQuery.extend({}, defaults);
-			$scope.onchange();
-		}
-		
-		$scope.getRateLimit = function() {
-			var val = $scope.settings.max;
-			if(val < 60) {
-				return "1 emote every "+(61 - val)+" seconds per user";
-			} else if(val < 120) {
-				var k = (val - 59);
-				return k+" emote"+(k==1?"":"s")+" per user per second";
-			} else return "unlimited emotes per user";
-		}
-		
-		$scope.buildUrl = function buildUrl() {
-			if($scope.settings.ch)
-			{
-				var base = /(.*)\/settings\/?$/.exec(window.location.href);
-				var res = base[1]+"?"+buildParam($scope.settings, defaults);
-			} else {
-				var res = "please set a channel";
-			}
-			return res;
-		};
-		
-		// jQuery to trigger $digests for localStorage changes
-		$(window).bind('storage', function (e) {
-			if(e.originalEvent.key === "kappagen_settings") {
-				console.log("Storage changed!");
-				var newsettings = JSON.parse(localStorage.kappagen_settings);
-				var settingkeys = Object.keys(newsettings);
-				$scope.$apply(function() {
-					for(var i=0;i<settingkeys.length;++i) {
-						var key = settingkeys[i];
-						var newval = newsettings[key];
-						$scope.settings[key] = newval;
-					}
-				});
-			}
-		});
-		
-		$scope.showToS = function(ev) {
-			$mdDialog.show({
-				controller: DialogController,
-				templateUrl: 'tos.html',
-				parent: angular.element(document.body),
-				targetEvent: ev,
-				clickOutsideToClose: true
-			});
-		}
-	});
+	<script src="directives.js"></script>
+	<script src="shared.js"></script>
 	
-	function DialogController($scope, $mdDialog) {
-		$scope.hide = function() {
-			$mdDialog.hide();
-		};
-		$scope.cancel = function() {
-			$mdDialog.cancel();
-		};
-		$scope.answer = function(answer) {
-			$mdDialog.hide(answer);
-		};
-	}
-	
-	
-	</script>
-	<!-- onslut is a cunt... -->
+    <script src="settings.js"></script>
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
