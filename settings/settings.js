@@ -60,6 +60,38 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 		}
 	}
 	
+	$scope.importSettings = function(ev){
+		$mdDialog.show($mdDialog.prompt({
+			title: "Import beta settings",
+			textContent: "Insert your old settings url (needs to be cloud sync) or just the cuid",
+			ok: "Import",
+			cancel: "Cancel",
+			parent: angular.element(document.body),
+			targetEvent: ev,
+			clickOutsideToClose: true
+		})).then(function(val){
+			if(val) {
+				var m = /cuid=([0-9][0-9a-z]{10,})/.exec(val) || /^([0-9][0-9a-z]{10,})$/.exec(val);
+				if(m) {
+					return doImportSettings(m[1]);
+				}
+			}
+			$mdDialog.show($mdDialog.alert({
+				title: "Could not import settings",
+				textContent: "Invalid cuid",
+				ok: "OK",
+				parent: angular.element(document.body),
+				clickOutsideToClose: true
+			}));
+		});
+	}
+	
+	var doImportSettings = function(cuid) {
+		localStorage.kappagen_cloudsync = true;
+		localStorage.kappagen_cuid = cuid;
+		window.location.reload();
+	}
+	
 	
 	
 	handleFirebase();

@@ -4,8 +4,8 @@ angular.module("specialInputs", [])
 			require: "?ngModel",
 			scope: {
 				model: '=ngModel',
-				height: '=height',
-				width: '=width',
+				height: '=?height',
+				width: '=?width',
 				stroke: '=stroke'
 			},
 			restrict: 'E',

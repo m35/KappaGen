@@ -93,6 +93,10 @@ md-select.inlineselect {
 	padding 0;
 }
 
+.smallbutton {
+	margin: 0;
+}
+
 .closedialog {
 	margin: auto;
 	display: block;

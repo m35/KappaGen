@@ -7,14 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>KappaGen2 Settings</title>
     
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css">
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
 	<link href='https://fonts.googleapis.com/css?family=Open+Sans:700' rel='stylesheet' type='text/css'>
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link href='settings.css' rel='stylesheet' type='text/css'>
   </head>
 
   <body ng-app="app" ng-controller="AppCtrl as ctrl">
-	<div class="header">The KappaGen beta has ended! Thanks for your feedback!</div>
+	<div class="header">The KappaGen beta has ended! Thanks for your feedback!&emsp; <md-button class="md-raised md-primary smallbutton" ng-click="importSettings($event)">Import beta settings</md-button></div>
 	<div ng-hide="loaded" class="loading" layout="row" layout-align="center center">
 		<div flex="none"><md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...</div>
 	</div>
@@ -176,14 +176,14 @@
 	</div>
     
   	<script src="https://code.jquery.com/jquery.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-sanitize.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-sanitize.min.js"></script>
 
 	<!-- Angular Material Library -->
-	<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
 	
 	<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
 	<script src="https://cdn.firebase.com/libs/angularfire/1.1.4/angularfire.min.js"></script>
