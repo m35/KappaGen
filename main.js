@@ -1,7 +1,7 @@
 var CORSProvider = "//beta.cbenni.com/cors-proxy/]http:";
 
 function log(msg) {
-	$(".debug").prepend(msg+"<br>");
+	$(".debug").prepend($("<p></p>").text(msg));
 }
 setInterval(function(){$(".debug").empty()},100000);
 
@@ -138,13 +138,35 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	}
 	
 	function emotesplosion(allowedEmotes) {
-		if(allowedEmotes === undefined) {
+		// allowedEmotes can be a list of emotes (in which case we dont change it)
+		// of a string, for example "ffz, bttv"
+		if(typeof(allowedEmotes) === "string") {
+			var types = allowedEmotes.toLowerCase().match(/\w+/g);
 			allowedEmotes = [];
+			for(var j=0;j<types.length;++j) {
+				if("subscribers".startsWith(types[j])) for(var i=0;i<subEmotes.sub.length;++i) allowedEmotes.push(subEmotes.sub[i]);
+				if("bttv" == types[j]) for(var i=0;i<subEmotes.bttv.length;++i) allowedEmotes.push(subEmotes.bttv[i]);
+				if("bttv" == types[j] && $scope.settings.gif || "gif" == types[j]) for(var i=0;i<subEmotes.gif.length;++i) allowedEmotes.push(subEmotes.gif[i]);
+				if("ffz" == types[j]) for(var i=0;i<subEmotes.ffz.length;++i) allowedEmotes.push(subEmotes.ffz[i]);
+			}
+		// or undefined
+		} else {
+			if(allowedEmotes === undefined) {
+				allowedEmotes = [];
+			}
+		}
+		
+		// if no emotes have been added so far, we try sub emotes
+		if(allowedEmotes.length == 0) {
 			for(var i=0;i<subEmotes.sub.length;++i) allowedEmotes.push(subEmotes.sub[i]);
+		}
+		// still none (not partnered)? FFZ+BTTV emotes if allowed by the settings
+		if(allowedEmotes.length == 0) {
 			if($scope.settings.bttv) for(var i=0;i<subEmotes.bttv.length;++i) allowedEmotes.push(subEmotes.bttv[i]);
 			if($scope.settings.bttv && $scope.settings.gif) for(var i=0;i<subEmotes.gif.length;++i) allowedEmotes.push(subEmotes.gif[i]);
 			if($scope.settings.ffz) for(var i=0;i<subEmotes.ffz.length;++i) allowedEmotes.push(subEmotes.ffz[i]);
 		}
+		// still none (not partnered, no FFZ or BTTV emotes), add global emotes (Those exist)
 		if(allowedEmotes.length == 0) {
 			allowedEmotes = globalEmotes;
 		}
@@ -152,10 +174,14 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	}
 	
 	function handleCommand(w,data) {
-		split = data.text.toLowerCase().split(" ");
+		split = data.text.trim().toLowerCase().split(" ");
 		if(split.length >= 2 && (data.nick === channel || data.nick === "cbenni" || data.nick === "onslaught" || $scope.settings.mods && data.tags.mod === "1")) {
 			if(split[1] == "emotesplosiontest") {
-				emotesplosion();
+				if(split.length >= 3) {
+					emotesplosion(split.slice(2).join(" "));
+				} else {
+					emotesplosion();
+				}
 			} else if(split[1] == "customsplosion") {
 				var allowedEmotes = [];
 				for(var i=0;i<data.emotes.length;i++) {
@@ -353,7 +379,10 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	
 	// load API data
 	$.getJSON("https://api.frankerfacez.com/v1/room/"+channel, loadFFZChannel);
-	if(channel !== "cbenni") $.getJSON("https://api.frankerfacez.com/v1/room/cbenni", loadFFZ);
+	if(channel !== "cbenni") {
+		$.getJSON("https://api.frankerfacez.com/v1/room/cbenni", loadFFZ);
+		$.getJSON("https://api.betterttv.net/2/channels/cbenni", loadBTTV);
+	}
 	$.getJSON("https://api.frankerfacez.com/v1/set/global", loadFFZ);
 	$.getJSON("https://api.betterttv.net/2/channels/"+channel, loadBTTVChannel);
 	$.getJSON("https://api.betterttv.net/2/emotes", loadBTTV);
