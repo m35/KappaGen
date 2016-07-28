@@ -14,7 +14,7 @@
   </head>
 
   <body ng-app="app" ng-controller="AppCtrl as ctrl">
-	<div class="header">The KappaGen beta has ended! Thanks for your feedback!&emsp; <md-button class="md-raised md-primary smallbutton" ng-click="importSettings($event)">Import beta settings</md-button></div>
+	<div class="header">IMPORTANT: I am looking for content creators for an introduction video about KappaGen - please DM me <a href="http://twitter.com/cbenni_o" style="color: white"><img src="twitterlogo.png" style="height: 20px; vertical-align: middle;"> @cbenni_o</a></div>
 	<div ng-hide="loaded" class="loading" layout="row" layout-align="center center">
 		<div flex="none"><md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...</div>
 	</div>
@@ -29,6 +29,7 @@
 				</ul>
 			</li>
 			<li><md-checkbox ng-model="settings.ffz" ng-change="onchange()">use FFZ emotes</md-checkbox></li>
+			<li><md-checkbox ng-model="settings.channelonly" ng-change="onchange()">Only emotes from this channel</md-checkbox></li>
 			<li><md-checkbox ng-model="settings.mods" ng-change="onchange()">Allow chat moderators to use chat commands</md-checkbox></li>
 			<li layout="row">
 				<md-slider flex ng-model="settings.size" min="12" max="255" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
@@ -36,6 +37,15 @@
 					<span>emote size: {{settings.size}} pixels</span>
 					<img src="https://static-cdn.jtvnw.net/emoticons/v1/55338/3.0" style="height: {{settings.size}}px;" class="kappapride">
 				</div>
+			</li>
+		</ul>
+		<h2>Integration settings</h2>
+		<ul>
+			<li ng-hide="gamewisp">
+				<md-button class="md-raised image-button" ng-href="{{gw_connect()}}"><img src="GameWisp_Small_Grey.png" class="gw-icon"></md-button>
+			</li>
+			<li ng-show="gamewisp">
+				<md-button class="md-raised image-button" ng-click="gw_disconnect()">Disconnect gamewisp ({{gamewisp.twitch.data.name}})</md-button>
 			</li>
 		</ul>
 		<h2><md-checkbox ng-model="settings.chatemotes" ng-change="onchange()">Chat emotes</md-checkbox></h2>
@@ -147,7 +157,7 @@
 		<ul>
 			<li><md-input-container><input type="text" ng-model="channel" placeholder="Channel name"></input></md-input-container></li>
 		</ul>
-		<div layout-padding><md-button ng-click="resetSettings()" class="md-raised md-primary">Reset to default</md-button></div>
+		<div style="margin: 8px;"><md-button ng-click="resetSettings()" class="md-raised md-primary smallbutton">Reset to default</md-button> <md-button class="md-raised md-primary smallbutton" ng-click="importSettings($event)">Import settings from cloud</md-button></div>
 		<div class="md-whiteframe-3dp layout-padding box">
 			<div flex="none">
 				Resulting URL:&nbsp; <strong id="urlres" ng-bind-html="buildUrl()"></strong>
@@ -159,7 +169,7 @@
 			<div ng-show="cloudsync">Do not show the link (especially the blurred ID) to anyone you do not trust! It can be used to modify your settings!</div>
 			<div>Add a CLR-Browser to your global scenes and set it to show that page. <span ng-hide="cloudsync">You have to copy the link <strong>every time you change a setting!</strong></span><br>Alternatively, use these chat commands:</div>
 			<ul>
-				<li ng-repeat="(key, val) in settings" ng-if="key != 'v' && key != 'ch' && val != defaults[key] && (typeof(defaults[key]) != 'object')"><code>!kappagen {{key}} {{val}}</code></li>
+				<li ng-repeat="(key, val) in settings" ng-if="key != 'v' && key != 'ch' && key != 'gamewisp' && val != defaults[key] && (typeof(defaults[key]) != 'object')"><code>!kappagen {{key}} {{val}}</code></li>
 			</ul>
 			<span>And some commands to test your emotesplosions:</span>
 			<ul>
@@ -173,6 +183,9 @@
 		Made with <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-934a78aa6d805cd7-21x18.png"> by <a href="http://twitter.com/cbenni_o"><img src="twitterlogo.png"> @cbenni_o</a>
 		</div>
 		<md-button class="rightbutton" ng-click="showToS($event)">ToS</md-button>
+		<div class="rightbutton donate-btn md-button" layout="column" layout-align="center center">
+			<a href="https://www.twitchalerts.com/donate/cbenni"><img src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" /></a>
+		</div>
 	</div>
     
   	<script src="https://code.jquery.com/jquery.min.js"></script>

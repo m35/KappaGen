@@ -8,6 +8,7 @@ defaults = {
 	gif: true,
 	mods: false,
 	size: 112,
+	channelonly: false,
 	
 	subonly: false,
 	chatemotes: true,
@@ -36,3 +37,10 @@ defaults = {
 	},
 	emotesplosiondir: "1,0"
 };
+
+gamewispAuth = {
+	clientId: "dbc5b8c486e4d64b730dfde2103661c9e710645",
+	authUrl: "http://127.0.0.1:8081/auth",
+	refreshUrl: "http://127.0.0.1:8081/refresh",
+	subsUrl: "http://127.0.0.1:8081/subs"
+}

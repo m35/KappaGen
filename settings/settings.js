@@ -1,6 +1,5 @@
 var app = angular.module("app",["ngMaterial","firebase","ngSanitize","ngclipboard","specialInputs"]);
 
-
 function guid() {
   function s4() { // generates 4 random lowercase alphanumeric characters
     return Math.floor((1 + Math.random()) * 1679616) // 1679616 = 36^4 = 1000 in base 36
@@ -12,7 +11,19 @@ function guid() {
   return res;
 }
 
-app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $window){
+// niceCode™
+function parseQueryParams(url) {
+	var res = {};
+	url.replace(/([^?=&]+)(?:=([^&]*))?/g,function(m, k, v){res[decodeURIComponent(k)] = v?decodeURIComponent(v):true; });
+	return res;
+}
+
+// get the query params and remove them from the address bar
+var queryParams = parseQueryParams(window.location.href);
+window.history.pushState({}, "", window.location.href.split("?")[0]);
+
+
+app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $window, $http){
 	var self = this;
 	$scope.defaults = defaults;
 	jQuery.extend(true, $scope.settings, defaults);
@@ -44,6 +55,15 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 						$scope.settings = jQuery.extend(true, {},defaults);
 					}
 					$scope.loaded = true;
+					
+					// apply gamewisp stuff in case it was provided
+					if(queryParams.gw_token) {
+						$scope.settings.gamewisp = {
+							token: queryParams.gw_token,
+							refresh: queryParams.gw_refresh
+						};
+					}
+					getGameWispInfo();
 				});
 			} else {
 				Firebase.goOnline();
@@ -53,6 +73,14 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 			if($scope.loaded === false) {
 				$scope.settings = jQuery.extend(true, {},defaults);
 				$scope.loaded = true;
+				// apply gamewisp stuff in case it was provided
+				if(queryParams.gw_token) {
+					$scope.settings.gamewisp = {
+						token: queryParams.gw_token,
+						refresh: queryParams.gw_refresh
+					};
+				}
+				getGameWispInfo();
 			}
 			else {
 				Firebase.goOffline();
@@ -62,8 +90,8 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 	
 	$scope.importSettings = function(ev){
 		$mdDialog.show($mdDialog.prompt({
-			title: "Import beta settings",
-			textContent: "Insert your old settings url (needs to be cloud sync) or just the cuid",
+			title: "Import settings",
+			textContent: "Insert your overlay url (needs to be cloud sync) or just the cuid",
 			ok: "Import",
 			cancel: "Cancel",
 			parent: angular.element(document.body),
@@ -94,11 +122,6 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 	
 	
 	
-	handleFirebase();
-	$scope.$watch("cloudsync", function(){
-		localStorage.kappagen_cloudsync = $scope.cloudsync;
-		handleFirebase();
-	});
 	
 	
 	
@@ -172,6 +195,47 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 			clickOutsideToClose: true
 		});
 	}
+	
+	$scope.gw_connect = function() {
+		return gamewispAuth.authUrl;
+	}
+	
+	$scope.gw_disconnect = function() {
+		$scope.gamewisp = null;
+		$scope.settings.gamewisp = null;
+	}
+	
+	var getGameWispInfo = function() {
+		var gwsettings = $scope.settings.gamewisp;
+		if(gwsettings) {
+			$http.jsonp("https://api.gamewisp.com/pub/v1/channel/information", {
+					params: { access_token: gwsettings.token, include: "twitch,tiers", callback: "JSON_CALLBACK" }
+			}).then(function(response) {
+				$scope.gamewisp = response.data.data;
+				// refresh token
+				/*$http.jsonp(gamewispAuth.refreshUrl, {token: gwsettings.token, refresh: gwsettings.refresh}).then(function(response){
+					$scope.settings.gamewisp = {
+						token: response.access_token,
+						refresh: response.refresh_token
+					};
+				}, function(error) {
+					console.error(error);
+				});*/
+			}, function(error) {
+				$scope.gamewisp = null;
+				$scope.settings.gamewisp = null;
+				console.error(error);
+			});
+		} else {
+			$scope.gamewisp = null;
+		}
+	}
+	
+	handleFirebase();
+	$scope.$watch("cloudsync", function(){
+		localStorage.kappagen_cloudsync = $scope.cloudsync;
+		handleFirebase();
+	});
 });
 
 function DialogController($scope, $mdDialog) {

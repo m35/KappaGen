@@ -46,8 +46,10 @@ li {
 .header {
 	top: 0px;
 	width: 100%;
-	background-color: #ffff99;
+	background-color: #ff4747;
+	color: white;
 	padding: 8px;
+	box-sizing: border-box;
 }
 
 h1, h2, h3 {
@@ -122,4 +124,10 @@ div.inline {
 
 div.twocolumn {
 	min-width: 300px;
+}
+
+.gw-icon {
+	height: 30px;
+	vertical-align: middle;
+    margin: 5px;
 }

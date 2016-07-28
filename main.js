@@ -1,9 +1,8 @@
 var CORSProvider = "//beta.cbenni.com/cors-proxy/]http:";
 
 function log(msg) {
-	$(".debug").prepend($("<p></p>").text(msg));
+	console.log(msg);
 }
-setInterval(function(){$(".debug").empty()},100000);
 
 function parseQueryParams(url) {
 	var res = {};
@@ -50,10 +49,15 @@ toastr.options = {
 
 var app = angular.module("app",["firebase"]);
 
-app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
+app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http){
 	$scope.loaded = false;
 	var params = parseQueryParams(window.location.search);
-	var channel = params.channel.toLowerCase();
+	var channel = params.channel
+	if(!channel) {
+		window.location.href += "/settings";
+		return;
+	}
+	channel = channel.toLowerCase();
 	var userAccounts = {};
 	var lastSent = {};
 	
@@ -70,7 +74,8 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 
 	var animationkeys = [];
 	function drawEmote(user, emote) {
-		if($scope.settings.chatemotes && getUserAccount(user)<1000) {
+		// check rate limit and if we are allowed to use this emote
+		if($scope.settings.chatemotes && getUserAccount(user)<1000 && (!$scope.settings.channelonly || emote.channel)) {
 			console.log("User account for "+user+": "+getUserAccount(user))
 			var ratelimit = 1000*$scope.settings.limit;
 			if(ratelimit != 0)addUserAccount(user, ratelimit+10); // +10 to account for execution time, preventing limit violations.
@@ -83,7 +88,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 		}
 	}
 	
-	var canvas = $("#emoteScreen")[0];
+	var canvas = document.getElementById("emoteScreen");
 	var ctx = canvas.getContext('2d');
 	
 	
@@ -180,7 +185,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				if(split.length >= 3) {
 					emotesplosion(split.slice(2).join(" "));
 				} else {
-					emotesplosion();
+					handleMessage(null, ":twitchnotify!twitchnotify@twitchnotify.tmi.twitch.tv PRIVMSG #"+channel+" :test_user just subscribed!");
 				}
 			} else if(split[1] == "customsplosion") {
 				var allowedEmotes = [];
@@ -219,7 +224,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				handleCommand(w,extmsg);
 				return;
 			}
-			else if($scope.settings.subonly && extmsg.tags.subscriber !== "1" && extmsg.tags.mod !== "1") return; // do nothing for plebs when sub only mode is active.
+			else if($scope.settings.subonly && extmsg.tags && !gw_subs[extmsg.nick] && extmsg.tags.subscriber !== "1" && extmsg.tags.mod !== "1" && extmsg.nick != channel) return; // do nothing for plebs when sub only mode is active.
 			else if(extmsg.nick === "twitchnotify") {
 				if(getEmotesplosionTriggers("s"))emotesplosion();
 				return;
@@ -227,78 +232,98 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 				for(var i=0;i<extmsg.emoteids.length;i++) {
 					var emoteid = extmsg.emoteids[i];
 					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emoteid+"/3.0";
-					drawEmote(extmsg.nick, {url: imgPath, type: "twitch"});
+					// use the saved sub emotes if present.
+					drawEmote(extmsg.nick, id2SubEmote[emoteid] || {url: imgPath, type: "twitch", channel: false});
 				}
 			} else {
 				for(var i=0;i<extmsg.emotes.length;i++) {
 					var emote = extmsg.emotes[i];
 					log("drawing emote with id "+emote.id);
 					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0";
-					drawEmote(extmsg.nick, {url: imgPath, type: "twitch"});
+					// use the saved sub emotes if present.
+					drawEmote(extmsg.nick, id2SubEmote[emote.id] || {url: imgPath, type: "twitch", channel: false});
 				}
 			}
 			var foundemotes = {};
-			$.each(parsedmessage[STATE_TRAILING].trim().split(" "), function(key,val) {
-				var emote = extraEmotes[this];
+			var words = parsedmessage[STATE_TRAILING].trim().split(" ")
+			for(var i=0;i<words.length;++i) {
+				var emote = extraEmotes[words[i]];
 				if(emote !== undefined && $scope.settings[emote.type] && (emote.type != "gif" || $scope.settings.bttv)) {
 					if(!$scope.settings.once || !foundemotes[emote]) {
 						drawEmote(extmsg.nick, emote);
 						foundemotes[emote] = true;
 					}
 				}
-			});
+			}
+		}
+		else if (parsedmessage[STATE_COMMAND] == "USERNOTICE") {
+			if(parsedmessage[STATE_V3]
+				&& parsedmessage[STATE_V3]["msg-id"] == "resub"
+				&& getEmotesplosionTriggers("s")) {
+					emotesplosion();
+			}
 		}
 	}
 
 
 	extraEmotes = {};
-	function loadFFZ(data, xhr) {
-		$.each(data.sets, function(){
-			$.each(this.emoticons, function(){
-				var x = this.urls;
-				extraEmotes[this.name] = {"url":"https://"+ (x[4] || x[2] || x[1]), "type": "ffz"};
-			});
-		});
+	function loadFFZ(response) {
+		var sets = Object.keys(response.data.sets);
+		for(var i=0;i<sets.length;++i){
+			var set = response.data.sets[sets[i]];
+			for(var j=0;j<set.emoticons.length;++j) {
+				var x = set.emoticons[j].urls;
+				var emote = {"url": (x[4] || x[2] || x[1]), "type": "ffz", "channel": false};
+				// non-channel emotes have a lower precedence
+				if(!extraEmotes[set.emoticons[j].name]) extraEmotes[set.emoticons[j].name] = emote;
+			}
+		}
 	}
-	function loadFFZChannel(data, xhr) {
-		$.each(data.sets, function(){
-			$.each(this.emoticons, function(){
-				var x = this.urls;
-				var emote = {"url":"https://"+ (x[4] || x[2] || x[1]), "type": "ffz"};
-				extraEmotes[this.name] = emote;
+	function loadFFZChannel(response) {
+		var sets = Object.keys(response.data.sets);
+		for(var i=0;i<sets.length;++i){
+			var set = response.data.sets[sets[i]];
+			for(var j=0;j<set.emoticons.length;++j) {
+				var x = set.emoticons[j].urls;
+				var emote = {"url": (x[4] || x[2] || x[1]), "type": "ffz", "channel": true};
+				extraEmotes[set.emoticons[j].name] = emote;
 				subEmotes["ffz"].push(emote);
-			});
-		});
+			}
+		}
 	}
-	function loadBTTV(data, xhr) {
-		$.each(data.emotes, function(){
-			if(this.imageType == "gif") {
-				var emote = {"url": CORSProvider + data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: "gif"};
+	function loadBTTV(response) {
+		for(var i=0;i<response.data.emotes.length;++i){
+			var emote = response.data.emotes[i];
+			if(emote.imageType == "gif") {
+				var emote = {"url": CORSProvider + response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "gif", code: emote.code, "channel": false};
 				new ImageEx(emote.url, true);
 			} else {
-				var emote = {"url": data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: "bttv"};
+				var emote = {"url": response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "bttv", code: emote.code, "channel": false};
 			}
-			extraEmotes[this.code] = emote;
-		});
+			// non-channel emotes have a lower precedence
+			if(!extraEmotes[emote.code]) extraEmotes[emote.code] = emote;
+		}
 	}
-	function loadBTTVChannel(data, xhr) {
-		$.each(data.emotes, function(){
-			if(this.imageType == "gif") {
-				var emote = {"url": CORSProvider + data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: "gif"};
+	function loadBTTVChannel(response) {
+		for(var i=0;i<response.data.emotes.length;++i){
+			var emote = response.data.emotes[i];
+			if(emote.imageType == "gif") {
+				var emote = {"url": CORSProvider + response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "gif", code: emote.code, "channel": true};
 				new ImageEx(emote.url, true);
 			} else {
-				var emote = {"url": data.urlTemplate.replace("{{id}}",this.id).replace("{{image}}","3x"), type: "bttv"};
+				var emote = {"url": response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "bttv", code: emote.code, "channel": true};
 			}
-			extraEmotes[this.code] = emote;
+			extraEmotes[emote.code] = emote;
 			subEmotes[emote.type].push(emote);
-		});
+		}
 	}
 	var globalEmotes = [];
-	function loadGlobalEmotes(data, xhr) {
-		$.each(data.emoticon_sets[0], function(){
-			var emote = {"url":"http://static-cdn.jtvnw.net/emoticons/v1/"+this.id+"/3.0", type: this.imageType == "global"};
-			globalEmotes.push(emote);
-		});
+	function loadGlobalEmotes(response) {
+		var set = response.data.emoticon_sets[0];
+		for(var i=0;i<set.length;++i) {
+			var emote = set[i];
+			globalEmotes.push({"url":"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0", type: emote.imageType == "global", "channel": false});
+		}
 	}
 	
 	
@@ -314,28 +339,18 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	function updateFollows()
 	{
 		if(getEmotesplosionTriggers("f")) {
-			$.ajax({
-				url: "https://api.twitch.tv/kraken/channels/"+channel+"/follows",
-				type: 'GET',
-				crossDomain: true,
-				dataType: 'jsonp',
-				jsonp: 'callback',
-				data: { 
-					limit: "1"
-				}, 
-				success:function (data) {
-					if(data.follows.length>0)
+			$http.jsonp("https://api.twitch.tv/kraken/channels/"+channel+"/follows?limit=1&callback=JSON_CALLBACK").then(function (response) {
+				if(response.data.follows.length>0)
+				{
+					var newestfollower = response.data.follows[0].user.name;
+					if(lastfollowers === undefined) lastfollowers=[newestfollower];
+					if(lastfollowers.indexOf(newestfollower)<0)
 					{
-						var newestfollower = data.follows[0].user.name;
-						if(lastfollowers === undefined) lastfollowers=[newestfollower];
-						if(lastfollowers.indexOf(newestfollower)<0)
-						{
-							emotesplosion();
-							lastfollowers.push(newestfollower)
-						}
+						emotesplosion();
+						lastfollowers.push(newestfollower)
 					}
-					else if(lastfollowers === undefined) lastfollowers = [];
 				}
+				else if(lastfollowers === undefined) lastfollowers = [];
 			});
 		}
 	}
@@ -343,6 +358,8 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	var settingsLoaded = function() {
 		updateFollows(channel);
 		setInterval(updateFollows,10000);
+		// do gamewisp stuff (load list of subs, connect singularity)
+		gamewispConnect();
 	}
 	// load settings
 	if(params.cuid) {
@@ -378,52 +395,46 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
 	}
 	
 	// load API data
-	$.getJSON("https://api.frankerfacez.com/v1/room/"+channel, loadFFZChannel);
+	$http.get("https://api.frankerfacez.com/v1/room/"+channel).then(loadFFZChannel);
 	if(channel !== "cbenni") {
-		$.getJSON("https://api.frankerfacez.com/v1/room/cbenni", loadFFZ);
-		$.getJSON("https://api.betterttv.net/2/channels/cbenni", loadBTTV);
+		$http.get("https://api.frankerfacez.com/v1/room/cbenni").then(loadFFZ);
+		$http.get("https://api.betterttv.net/2/channels/cbenni").then(loadBTTV);
 	}
-	$.getJSON("https://api.frankerfacez.com/v1/set/global", loadFFZ);
-	$.getJSON("https://api.betterttv.net/2/channels/"+channel, loadBTTVChannel);
-	$.getJSON("https://api.betterttv.net/2/emotes", loadBTTV);
-	$.getJSON("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0", loadGlobalEmotes);
+	$http.get("https://api.frankerfacez.com/v1/set/global").then(loadFFZ);
+	$http.get("https://api.betterttv.net/2/channels/"+channel).then(loadBTTVChannel);
+	$http.get("https://api.betterttv.net/2/emotes").then(loadBTTV);
+	$http.jsonp("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0&callback=JSON_CALLBACK").then(loadGlobalEmotes);
 	
+	var id2SubEmote = {};
 	var subEmotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};
-	$.ajax({
-		url: "http://api.twitch.tv/api/channels/"+channel+"/product",
-		jsonp: "callback",
-		dataType: "jsonp",
-		success: function( response ) {
-			var emotes = response.emoticons;
-			for(var i=0;i<emotes.length;++i) {
-				var emote = emotes[i];
-				if(emote.state === "active") {
-					subEmotes.sub.push({type:"sub",url:"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0"});
-				}
+	$http.jsonp("http://api.twitch.tv/api/channels/"+channel+"/product?callback=JSON_CALLBACK").then(function( response ) {
+		var emotes = response.data.emoticons;
+		for(var i=0;i<emotes.length;++i) {
+			var emote = emotes[i];
+			if(emote.state === "active") {
+				var emoteObj = {type:"sub",url:"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0", "channel": true};
+				id2SubEmote[emote.id] = emoteObj;
+				subEmotes.sub.push(emoteObj);
 			}
 		}
 	});
 	
-	$.ajax({
-		url: "http://api.twitch.tv/api/channels/"+channel+"/chat_properties",
-		jsonp: "callback",
-		dataType: "jsonp",
-		success: function( response ) {
-			var wss = response.web_socket_servers;
-			var serverip = wss[Math.floor(Math.random() * wss.length)];
-			var w=new WebSocket('ws://'+serverip);
-			w.onmessage=function(e){
-				var lines = e.data.split("\r\n");
-				$.each(lines, function() {
-					if(this.length) handleMessage(w,this);
-				});
+	$http.jsonp("http://api.twitch.tv/api/channels/"+channel+"/chat_properties?callback=JSON_CALLBACK").then(function(response) {
+		var wss = response.data.web_socket_servers;
+		var serverip = wss[Math.floor(Math.random() * wss.length)];
+		var w=new WebSocket('ws://'+serverip);
+		w.onmessage=function(e){
+			var lines = e.data.split("\r\n");
+			for(var i=0;i<lines.length;++i){
+				var line = lines[i];
+				if(line.length) handleMessage(w,line);
 			}
-		
-			w.onopen=function(e) {
-				w.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-				w.send('NICK justinfan1');
-				w.send('JOIN #'+channel);
-			}
+		}
+	
+		w.onopen=function(e) {
+			w.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+			w.send('NICK justinfan1');
+			w.send('JOIN #'+channel);
 		}
 	});
 	
@@ -436,4 +447,86 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window){
             canvas.height = window.innerHeight;
     }
     resizeCanvas();
+	
+	
+	var singularity = null;
+	var lastGWToken = null;
+	var gw_subs = {};
+	
+	// singularity: socket.io connection to gamewisp
+	
+	var gamewispConnect = function() {
+		if(!$scope.settings) return;
+		var gw = $scope.settings.gamewisp;
+		if(gw) {
+			if(gw.token != lastGWToken) {
+				if(singularity) {
+					singularity.disconnect();
+					singularity = null;
+				}
+				// get gamewisp subs
+				$http.jsonp(gamewispAuth.subsUrl+"?token="+gw.token+"&callback=JSON_CALLBACK").then(function(subs) {
+					gw_subs = {};
+					for(var i=0;i<subs.data.length;++i) {
+						var sub = subs.data[i];
+						var status = sub.status;
+						var nick = sub.user.data.username;
+						if(status == "active" || status == "trial") {
+							gw_subs[nick] = true;
+						}
+					}
+				}, function(error) {
+					console.error(error);
+				});
+				
+				lastGWToken = gw.token;
+				console.log("Connecting to gamewisp channel");
+			}
+			if(!singularity) {
+				singularity = io("https://singularity.gamewisp.com");
+				_sing = singularity;
+				singularity.on("connect", function(){
+					console.log("Singularity connected!");
+					setTimeout(function() {
+						singularity.emit("authentication", { key: gamewispAuth.clientId, access_token: gw.token });
+					}, 10);
+				});
+				var session = null;
+				singularity.on("authenticated", function(data){
+					session = data.result.session;
+					console.log("Singularity authenticated!");
+					singularity.emit("channel-connect", { access_token: $scope.settings.gamewisp.token });
+					//singularity.emit("channel-subscribers", { status: "all", benefits: true, session: session, access_token: gw.token });
+				});
+				
+				singularity.on("app-channel-connected", function(data){
+					console.log("Connected to gamewisp channel!");
+				});
+				
+				singularity.on("subscriber-new", function(data) {
+					if(getEmotesplosionTriggers("s")) emotesplosion();
+					var nick = JSON.parse(data).data.usernames.twitch;
+					if(nick) {
+						gw_subs[nick] = true;
+					}
+				});
+				
+				singularity.on("subscriber-renewed", function(data) {
+					if(getEmotesplosionTriggers("s")) emotesplosion();
+				});
+				
+				singularity.on("app-channel-subscribers", function(data) {
+					console.log(data);
+				});
+			}
+		} else {
+			lastGWToken = null;
+			if(singularity) {
+				singularity.disconnect();
+				singularity = null;
+			}
+		}
+	}
+	$scope.$watch("settings.gamewisp.token", gamewispConnect);
+	
 });

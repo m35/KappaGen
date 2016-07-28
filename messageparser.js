@@ -1,13 +1,17 @@
 var rx = /^(?:@([^ ]+) )?(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/;
 var rx2 = /([^=;]+)=([^;]*)/g;
 var rx3 = /\r\n|\r|\n/;
-var STATE_V3 = 1;
-var STATE_PREFIX = 2;
-var STATE_COMMAND = 3;
-var STATE_PARAM = 4;
-var STATE_TRAILING = 5;
+var STATE_V3 = 1
+var STATE_PREFIX = 2
+var STATE_COMMAND = 3
+var STATE_PARAM = 4
+var STATE_TRAILING = 5
 function parseIRCMessage(message) {
 	var data = rx.exec(message);
+	if(data == null) {
+		winston.error("Couldnt parse message '"+message+"'");
+		return null;
+	}
 	var tagdata = data[STATE_V3];
 	if (tagdata) {
 		var tags = {};
