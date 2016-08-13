@@ -1,3 +1,5 @@
+# KappaGen 2
+
 KappaGen is the premier plugin that allows twitch.tv streamers to show the emotes from chat on their stream!
 
 **How does it work?**
