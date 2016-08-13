@@ -44,6 +44,6 @@ I would be happy for any feedback, since only with feedback can I improve the ap
 
 **Need help?**
 
-Contact me on reddit, twitch ( twitch.tv/cbenni) or twitter @cbenni_o
+Contact me on reddit (See the introduction post over at https://www.reddit.com/r/Twitch/comments/4aldgz/kappagen_an_app_to_display_emotes_from_your_chat/), twitch (https://twitch.tv/cbenni) or twitter @cbenni_o
 
 *Special thanks to onslaught for motivating me to rebuild this, and to bunniemuffin for allowing me to use her screenshot :P*
