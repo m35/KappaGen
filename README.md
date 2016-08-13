@@ -25,7 +25,7 @@ Emotesplosion after someone followed ![Screenshot](http://i.imgur.com/jV52TT9.jp
 
 ## Support
 You can contact me on my Reddit account [CBenni](https://reddit.com/user/cbenni), on my Twitter [@cbenni\_o](https://twitter.com/cbenni_o) or open an issue right here on GitHub.
-Also, see the reddit introduction thread:  [r/twitch](https://www.reddit.com/r/Twitch/comments/4aldgz/kappagen_an_app_to_display_emotes_from_your_chat/) )
+Also, see the reddit introduction thread on  [r/twitch](https://www.reddit.com/r/Twitch/comments/4aldgz/kappagen_an_app_to_display_emotes_from_your_chat/) )
  
 [Support me!](https://www.twitchalerts.com/donate/cbenni)
  
