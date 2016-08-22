@@ -355,7 +355,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		
 		syncObject.$loaded().then(function(data) {
 			if(data.v === undefined) {
-				$scope.settings = jQuery.extend(true, {},defaults);
+				$scope.settings = angular.copy(defaults);
 			}
 			$scope.loaded = true;
 			var defaultkeys = Object.keys(defaults);
@@ -366,7 +366,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			settingsLoaded();
 		});
 	} else {
-		$scope.settings = jQuery.extend(true, {},defaults);
+		$scope.settings = angular.copy(defaults);
 		var paramkeys = Object.keys(params);
 		for(var i=0;i<paramkeys.length;++i) {
 			var key = paramkeys[i];
