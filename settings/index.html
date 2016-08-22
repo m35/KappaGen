@@ -7,14 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>KappaGen2 Settings</title>
     
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
-	<link href='https://fonts.googleapis.com/css?family=Open+Sans:700' rel='stylesheet' type='text/css'>
-	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-	<link href='settings.css' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
+	<link href="//fonts.googleapis.com/css?family=Open+Sans:700" rel="stylesheet" type="text/css">
+	<link href="//fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link href="settings.css" rel="stylesheet" type="text/css">
   </head>
 
   <body ng-app="app" ng-controller="AppCtrl as ctrl">
-	<div class="header">IMPORTANT: I am looking for content creators for an introduction video about KappaGen - please DM me <a href="http://twitter.com/cbenni_o" style="color: white"><img src="twitterlogo.png" style="height: 20px; vertical-align: middle;"> @cbenni_o</a></div>
+	<div class="header">I have enabled site-wide HTTPS. If your settings reset, please <md-button class="md-raised md-primary smallbutton" ng-click="importSettings($event)">import them</md-button> - Sorry for the inconvenience.</div>
+	<div class="header" style="background-color: #1a660f">Check out the post on the <a href="https://blog.gamewisp.com/integration-spotlight-kappagen-76fce76e5d6c">GameWisp blog</a> about the new integration!</div>
 	<div ng-hide="loaded" class="loading" layout="row" layout-align="center center">
 		<div flex="none"><md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...</div>
 	</div>
@@ -45,7 +46,7 @@
 				<md-button class="md-raised image-button" ng-href="{{gw_connect()}}"><img src="GameWisp_Small_Grey.png" class="gw-icon"></md-button>
 			</li>
 			<li ng-show="gamewisp">
-				<md-button class="md-raised image-button" ng-click="gw_disconnect()">Disconnect gamewisp ({{gamewisp.twitch.data.name}})</md-button>
+				<md-button class="md-raised image-button" ng-click="gw_disconnect()">Disconnect gamewisp ({{gamewisp.name}})</md-button>
 			</li>
 		</ul>
 		<h2><md-checkbox ng-model="settings.chatemotes" ng-change="onchange()">Chat emotes</md-checkbox></h2>
@@ -188,21 +189,21 @@
 		</div>
 	</div>
     
-  	<script src="https://code.jquery.com/jquery.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-sanitize.min.js"></script>
+  	<script src="//code.jquery.com/jquery.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-sanitize.min.js"></script>
 
 	<!-- Angular Material Library -->
-	<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
 	
-	<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
-	<script src="https://cdn.firebase.com/libs/angularfire/1.1.4/angularfire.min.js"></script>
+	<script src="//cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
+	<script src="//cdn.firebase.com/libs/angularfire/1.1.4/angularfire.min.js"></script>
 	
-	<script src="https://cdn.rawgit.com/zenorocha/clipboard.js/master/dist/clipboard.min.js"></script>
-	<script src="https://cdn.rawgit.com/sachinchoolur/ngclipboard/master/dist/ngclipboard.min.js"></script>
+	<script src="clipboard.min.js"></script>
+	<script src="ngclipboard.min.js"></script>
 	
 	<script src="directives.js"></script>
 	<script src="shared.js"></script>

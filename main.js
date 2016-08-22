@@ -1,4 +1,4 @@
-var CORSProvider = "//beta.cbenni.com/cors-proxy/]http:";
+var CORSProvider = "//beta.cbenni.com/cors-proxy/]https:";
 
 function log(msg) {
 	console.log(msg);
@@ -29,23 +29,7 @@ if (!String.prototype.startsWith) {
   };
 }
 
-toastr.options = {
-	"closeButton": false,
-	"debug": false,
-	"newestOnTop": true,
-	"progressBar": false,
-	"positionClass": "toast-top-right",
-	"preventDuplicates": false,
-	"onclick": null,
-	"showDuration": "300",
-	"hideDuration": "1000",
-	"timeOut": "5000",
-	"extendedTimeOut": "1000",
-	"showEasing": "swing",
-	"hideEasing": "linear",
-	"showMethod": "fadeIn",
-	"hideMethod": "fadeOut"
-}
+alertify.logPosition("top right");
 
 var app = angular.module("app",["firebase"]);
 
@@ -54,7 +38,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	var params = parseQueryParams(window.location.search);
 	var channel = params.channel
 	if(!channel) {
-		window.location.href += "/settings";
+		window.location.href = window.location.origin+window.location.pathname+"settings";
 		return;
 	}
 	channel = channel.toLowerCase();
@@ -95,21 +79,21 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	
 	function setSetting(key, val) {
 		if(defaults[key] === undefined) {
-			toastr.error("Invalid setting "+key);
+			alertify.error("Invalid setting "+key);
 			return;
 		} else {
 			var type = typeof(defaults[key]);
 			if(type === "number") {
 				val = parseFloat(val);
 				if(isNaN(val)) {
-					toastr.error("Invalid value '"+val+"' for integer setting "+key);
+					alertify.error("Invalid value '"+val+"' for integer setting "+key);
 					return;
 				}
 			} else if(type === "boolean") {
 				if(val === "true" || val === "on" || val === true) val = true;
 				else if(val === "false" || val === "off" || val === false) val = false;
 				else {
-					toastr.error("Invalid value '"+val+"' for boolean setting "+key);
+					alertify.error("Invalid value '"+val+"' for boolean setting "+key);
 					return;
 				}
 			} else if(type === "object") {
@@ -191,7 +175,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 				var allowedEmotes = [];
 				for(var i=0;i<data.emotes.length;i++) {
 					var emote = data.emotes[i];
-					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0";
+					var imgPath = "//static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0";
 					allowedEmotes.push({"url":imgPath});
 				}
 				var usplit = data.text.split(" ");
@@ -205,7 +189,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			} else if(split.length == 3) {
 				var oldval = $scope.settings[split[1]];
 				var res = setSetting(split[1],split[2]);
-				if(res !== undefined && oldval !== res) toastr.info(data.nick+" set setting "+split[1]+" from "+oldval+" to "+res);
+				if(res !== undefined && oldval !== res) alertify.success(data.nick+" set setting "+split[1]+" from "+oldval+" to "+res);
 			}
 		}
 	}
@@ -231,7 +215,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			} else if($scope.settings.once) {
 				for(var i=0;i<extmsg.emoteids.length;i++) {
 					var emoteid = extmsg.emoteids[i];
-					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emoteid+"/3.0";
+					var imgPath = "//static-cdn.jtvnw.net/emoticons/v1/"+emoteid+"/3.0";
 					// use the saved sub emotes if present.
 					drawEmote(extmsg.nick, id2SubEmote[emoteid] || {url: imgPath, type: "twitch", channel: false});
 				}
@@ -239,7 +223,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 				for(var i=0;i<extmsg.emotes.length;i++) {
 					var emote = extmsg.emotes[i];
 					log("drawing emote with id "+emote.id);
-					var imgPath = "http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0";
+					var imgPath = "//static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0";
 					// use the saved sub emotes if present.
 					drawEmote(extmsg.nick, id2SubEmote[emote.id] || {url: imgPath, type: "twitch", channel: false});
 				}
@@ -322,7 +306,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		var set = response.data.emoticon_sets[0];
 		for(var i=0;i<set.length;++i) {
 			var emote = set[i];
-			globalEmotes.push({"url":"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0", type: emote.imageType == "global", "channel": false});
+			globalEmotes.push({"url":"//static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0", type: emote.imageType == "global", "channel": false});
 		}
 	}
 	
@@ -339,7 +323,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	function updateFollows()
 	{
 		if(getEmotesplosionTriggers("f")) {
-			$http.jsonp("https://api.twitch.tv/kraken/channels/"+channel+"/follows?limit=1&callback=JSON_CALLBACK").then(function (response) {
+			$http.jsonp("//api.twitch.tv/kraken/channels/"+channel+"/follows?limit=1&callback=JSON_CALLBACK").then(function (response) {
 				if(response.data.follows.length>0)
 				{
 					var newestfollower = response.data.follows[0].user.name;
@@ -364,8 +348,8 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	// load settings
 	if(params.cuid) {
 		var cluster = params.cuid.substring(0,1);
-		console.log("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
-		var ref = new Firebase("https://kappagen-"+cluster+".firebaseio.com/"+params.cuid);
+		console.log("//kappagen-"+cluster+".firebaseio.com/"+params.cuid);
+		var ref = new Firebase("//kappagen-"+cluster+".firebaseio.com/"+params.cuid);
 		var syncObject = $firebaseObject(ref);
 		syncObject.$bindTo($scope, "settings");
 		
@@ -395,48 +379,44 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	}
 	
 	// load API data
-	$http.get("https://api.frankerfacez.com/v1/room/"+channel).then(loadFFZChannel);
+	$http.get("//api.frankerfacez.com/v1/room/"+channel).then(loadFFZChannel);
 	if(channel !== "cbenni") {
-		$http.get("https://api.frankerfacez.com/v1/room/cbenni").then(loadFFZ);
-		$http.get("https://api.betterttv.net/2/channels/cbenni").then(loadBTTV);
+		$http.get("//api.frankerfacez.com/v1/room/cbenni").then(loadFFZ);
+		$http.get("//api.betterttv.net/2/channels/cbenni").then(loadBTTV);
 	}
-	$http.get("https://api.frankerfacez.com/v1/set/global").then(loadFFZ);
-	$http.get("https://api.betterttv.net/2/channels/"+channel).then(loadBTTVChannel);
-	$http.get("https://api.betterttv.net/2/emotes").then(loadBTTV);
-	$http.jsonp("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0&callback=JSON_CALLBACK").then(loadGlobalEmotes);
+	$http.get("//api.frankerfacez.com/v1/set/global").then(loadFFZ);
+	$http.get("//api.betterttv.net/2/channels/"+channel).then(loadBTTVChannel);
+	$http.get("//api.betterttv.net/2/emotes").then(loadBTTV);
+	$http.jsonp("//api.twitch.tv/kraken/chat/emoticon_images?emotesets=0&callback=JSON_CALLBACK").then(loadGlobalEmotes);
 	
 	var id2SubEmote = {};
 	var subEmotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};
-	$http.jsonp("http://api.twitch.tv/api/channels/"+channel+"/product?callback=JSON_CALLBACK").then(function( response ) {
+	$http.jsonp("//api.twitch.tv/api/channels/"+channel+"/product?callback=JSON_CALLBACK").then(function( response ) {
 		var emotes = response.data.emoticons;
 		for(var i=0;i<emotes.length;++i) {
 			var emote = emotes[i];
 			if(emote.state === "active") {
-				var emoteObj = {type:"sub",url:"http://static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0", "channel": true};
+				var emoteObj = {type:"sub",url:"//static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0", "channel": true};
 				id2SubEmote[emote.id] = emoteObj;
 				subEmotes.sub.push(emoteObj);
 			}
 		}
 	});
 	
-	$http.jsonp("http://api.twitch.tv/api/channels/"+channel+"/chat_properties?callback=JSON_CALLBACK").then(function(response) {
-		var wss = response.data.web_socket_servers;
-		var serverip = wss[Math.floor(Math.random() * wss.length)];
-		var w=new WebSocket('ws://'+serverip);
-		w.onmessage=function(e){
-			var lines = e.data.split("\r\n");
-			for(var i=0;i<lines.length;++i){
-				var line = lines[i];
-				if(line.length) handleMessage(w,line);
-			}
+	var w=new WebSocket('wss://irc-ws.chat.twitch.tv');
+	w.onmessage=function(e){
+		var lines = e.data.split("\r\n");
+		for(var i=0;i<lines.length;++i){
+			var line = lines[i];
+			if(line.length) handleMessage(w,line);
 		}
-	
-		w.onopen=function(e) {
-			w.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-			w.send('NICK justinfan1');
-			w.send('JOIN #'+channel);
-		}
-	});
+	}
+
+	w.onopen=function(e) {
+		w.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+		w.send('NICK justinfan1');
+		w.send('JOIN #'+channel);
+	}
 	
 	// initialize rendering
 	window.requestAnimationFrame(animStep);
@@ -470,7 +450,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 					for(var i=0;i<subs.data.length;++i) {
 						var sub = subs.data[i];
 						var status = sub.status;
-						var nick = sub.user.data.username;
+						var nick = sub.user.data.username.toLowerCase();
 						if(status == "active" || status == "trial") {
 							gw_subs[nick] = true;
 						}
@@ -511,7 +491,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 					}
 				});
 				
-				singularity.on("subscriber-renewed", function(data) {
+				singularity.on("subscriber-anniversary", function(data) {
 					if(getEmotesplosionTriggers("s")) emotesplosion();
 				});
 				

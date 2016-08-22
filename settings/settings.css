@@ -76,6 +76,10 @@ a, a:visited, a:hover, a:active {
 	font-family: 'Open Sans', sans-serif;
 }
 
+.header a, .header a:visited, .header a:hover, .header a:active {
+	color: white;
+}
+
 .box {
 	margin-bottom: 5px;
 }

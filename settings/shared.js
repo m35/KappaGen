@@ -9,7 +9,6 @@ defaults = {
 	mods: false,
 	size: 112,
 	channelonly: false,
-	
 	subonly: false,
 	chatemotes: true,
 	once: false,
@@ -39,8 +38,8 @@ defaults = {
 };
 
 gamewispAuth = {
-	clientId: "dbc5b8c486e4d64b730dfde2103661c9e710645",
-	authUrl: "http://127.0.0.1:8081/auth",
-	refreshUrl: "http://127.0.0.1:8081/refresh",
-	subsUrl: "http://127.0.0.1:8081/subs"
+	clientId: "1b22119ee42a4f68f9b7c58cad961ec1b0ec0e2",
+	authUrl: "https://cbenni.com/kappagen_server/auth",
+	refreshUrl: "https://cbenni.com/kappagen_server/refresh",
+	subsUrl: "https://cbenni.com/kappagen_server/subs"
 }
