@@ -345,38 +345,6 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		// do gamewisp stuff (load list of subs, connect singularity)
 		gamewispConnect();
 	}
-	// load settings
-	if(params.cuid) {
-		var cluster = params.cuid.substring(0,1);
-		console.log("//kappagen-"+cluster+".firebaseio.com/"+params.cuid);
-		var ref = new Firebase("//kappagen-"+cluster+".firebaseio.com/"+params.cuid);
-		var syncObject = $firebaseObject(ref);
-		syncObject.$bindTo($scope, "settings");
-		
-		syncObject.$loaded().then(function(data) {
-			if(data.v === undefined) {
-				$scope.settings = angular.copy(defaults);
-			}
-			$scope.loaded = true;
-			var defaultkeys = Object.keys(defaults);
-			for(var i=0;i<defaultkeys.length;++i) {
-				var key = defaultkeys[i];
-				if($scope.settings[key] === undefined) $scope.settings[key] = defaults[key];
-			}
-			settingsLoaded();
-		});
-	} else {
-		$scope.settings = angular.copy(defaults);
-		var paramkeys = Object.keys(params);
-		for(var i=0;i<paramkeys.length;++i) {
-			var key = paramkeys[i];
-			var val = params[key];
-			if(key === "channel") continue;
-			if(val[0] == "{") $scope.settings[key] = JSON.parse(val);
-			else $scope.settings[key] = val;
-		}
-		settingsLoaded();
-	}
 	
 	// load API data
 	$http.get("//api.frankerfacez.com/v1/room/"+channel).then(loadFFZChannel);
@@ -508,5 +476,39 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		}
 	}
 	$scope.$watch("settings.gamewisp.token", gamewispConnect);
+	
+	
+	// load settings
+	if(params.cuid) {
+		var cluster = params.cuid.substring(0,1);
+		console.log("//kappagen-"+cluster+".firebaseio.com/"+params.cuid);
+		var ref = new Firebase("//kappagen-"+cluster+".firebaseio.com/"+params.cuid);
+		var syncObject = $firebaseObject(ref);
+		syncObject.$bindTo($scope, "settings");
+		
+		syncObject.$loaded().then(function(data) {
+			if(data.v === undefined) {
+				$scope.settings = angular.copy(defaults);
+			}
+			$scope.loaded = true;
+			var defaultkeys = Object.keys(defaults);
+			for(var i=0;i<defaultkeys.length;++i) {
+				var key = defaultkeys[i];
+				if($scope.settings[key] === undefined) $scope.settings[key] = defaults[key];
+			}
+			settingsLoaded();
+		});
+	} else {
+		$scope.settings = angular.copy(defaults);
+		var paramkeys = Object.keys(params);
+		for(var i=0;i<paramkeys.length;++i) {
+			var key = paramkeys[i];
+			var val = params[key];
+			if(key === "channel") continue;
+			if(val[0] == "{") $scope.settings[key] = JSON.parse(val);
+			else $scope.settings[key] = val;
+		}
+		settingsLoaded();
+	}
 	
 });
