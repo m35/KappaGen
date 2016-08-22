@@ -1,4 +1,4 @@
-var CORSProvider = "//beta.cbenni.com/cors-proxy/]https:";
+var CORSProvider = "//cbenni.com/cors-proxy/]https:";
 
 function log(msg) {
 	console.log(msg);
