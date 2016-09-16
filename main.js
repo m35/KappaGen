@@ -323,7 +323,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	function updateFollows()
 	{
 		if(getEmotesplosionTriggers("f")) {
-			$http.jsonp("//api.twitch.tv/kraken/channels/"+channel+"/follows?limit=1&callback=JSON_CALLBACK").then(function (response) {
+			$http.jsonp("//api.twitch.tv/kraken/channels/"+channel+"/follows?limit=1&callback=JSON_CALLBACK&client_id="+twitchAuth.clientId).then(function (response) {
 				if(response.data.follows.length>0)
 				{
 					var newestfollower = response.data.follows[0].user.name;
@@ -359,7 +359,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	
 	var id2SubEmote = {};
 	var subEmotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};
-	$http.jsonp("//api.twitch.tv/api/channels/"+channel+"/product?callback=JSON_CALLBACK").then(function( response ) {
+	$http.jsonp("//api.twitch.tv/api/channels/"+channel+"/product?callback=JSON_CALLBACK&client_id="+twitchAuth.clientId).then(function( response ) {
 		var emotes = response.data.emoticons;
 		for(var i=0;i<emotes.length;++i) {
 			var emote = emotes[i];
