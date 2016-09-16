@@ -355,7 +355,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	$http.get("//api.frankerfacez.com/v1/set/global").then(loadFFZ);
 	$http.get("//api.betterttv.net/2/channels/"+channel).then(loadBTTVChannel);
 	$http.get("//api.betterttv.net/2/emotes").then(loadBTTV);
-	$http.jsonp("//api.twitch.tv/kraken/chat/emoticon_images?emotesets=0&callback=JSON_CALLBACK").then(loadGlobalEmotes);
+	$http.jsonp("//api.twitch.tv/kraken/chat/emoticon_images?emotesets=0&client_id="+twitchAuth.clientId+"&callback=JSON_CALLBACK").then(loadGlobalEmotes);
 	
 	var id2SubEmote = {};
 	var subEmotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};

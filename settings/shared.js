@@ -43,3 +43,7 @@ gamewispAuth = {
 	refreshUrl: "https://cbenni.com/kappagen_server/refresh",
 	subsUrl: "https://cbenni.com/kappagen_server/subs"
 }
+
+twitchAuth = {
+	clientId: "29twi1zom836oukcnn3jy350sgiid37"
+}
