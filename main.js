@@ -312,6 +312,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	
 	
 	var getEmotesplosionTriggers = function(type) {
+		if(!$scope.settings.emotesplosions) return false;
 		var triggers = $scope.settings.emotesplosiontriggers.split("+");
 		for(var i=0;i<triggers.length;++i){
 			if(triggers[i][0] === type) return true;
