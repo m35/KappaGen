@@ -280,7 +280,6 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			var emote = response.data.emotes[i];
 			if(emote.imageType == "gif") {
 				var emote = {"url": CORSProvider + response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "gif", code: emote.code, "channel": false};
-				new ImageEx(emote.url, true);
 			} else {
 				var emote = {"url": response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "bttv", code: emote.code, "channel": false};
 			}
@@ -293,7 +292,6 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			var emote = response.data.emotes[i];
 			if(emote.imageType == "gif") {
 				var emote = {"url": CORSProvider + response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "gif", code: emote.code, "channel": true};
-				new ImageEx(emote.url, true);
 			} else {
 				var emote = {"url": response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "bttv", code: emote.code, "channel": true};
 			}
@@ -345,17 +343,16 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		setInterval(updateFollows,10000);
 		// do gamewisp stuff (load list of subs, connect singularity)
 		gamewispConnect();
+		$http.get("//api.betterttv.net/2/channels/"+channel).then(loadBTTVChannel);
+		$http.get("//api.betterttv.net/2/emotes").then(loadBTTV);
 	}
 	
 	// load API data
 	$http.get("//api.frankerfacez.com/v1/room/"+channel).then(loadFFZChannel);
 	if(channel !== "cbenni") {
 		$http.get("//api.frankerfacez.com/v1/room/cbenni").then(loadFFZ);
-		$http.get("//api.betterttv.net/2/channels/cbenni").then(loadBTTV);
 	}
 	$http.get("//api.frankerfacez.com/v1/set/global").then(loadFFZ);
-	$http.get("//api.betterttv.net/2/channels/"+channel).then(loadBTTVChannel);
-	$http.get("//api.betterttv.net/2/emotes").then(loadBTTV);
 	$http.jsonp("//api.twitch.tv/kraken/chat/emoticon_images?emotesets=0&client_id="+twitchAuth.clientId+"&callback=JSON_CALLBACK").then(loadGlobalEmotes);
 	
 	var id2SubEmote = {};
