@@ -179,7 +179,7 @@ app.controller("AppCtrl",function($scope, $mdDialog, $firebaseObject, $sce, $win
 		if($scope.settings && $scope.channel)
 		{
 			var base = /(.*)\/settings/.exec(window.location.href);
-			var res = base[1]+"?channel="+$scope.channel+""+buildParam($scope.settings, defaults);
+			var res = base[1]+"/?channel="+$scope.channel+""+buildParam($scope.settings, defaults);
 		} else {
 			var res = '<span class="error">please set a channel</span>';
 		}
