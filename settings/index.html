@@ -18,164 +18,178 @@
 	<div ng-hide="loaded" class="loading" layout="row" layout-align="center center">
 		<div flex="none"><md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...</div>
 	</div>
-    <div class="content ng-cloak" ng-show="loaded">
-		<h1>KappaGen settings</h1>
-		<h2>General settings</h2>
-		<ul>
-			<li>
-				<md-checkbox ng-model="settings.bttv" ng-change="onchange()">use BTTV emotes</md-checkbox>
+	<div class="pagecontent" layout="row">
+		<div class="leftbar" flex="none" hide-sm>
+			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+			<!-- kappagen settings -->
+			<ins class="adsbygoogle"
+				 style="display:inline-block;width:300px;height:600px"
+				 data-ad-client="ca-pub-2798636888667019"
+				 data-ad-slot="7616465889">
+			</ins>
+			<script>
+			(adsbygoogle = window.adsbygoogle || []).push({});
+			</script>
+		</div>
+		<div class="content ng-cloak" ng-show="loaded" flex="80">
+			<h1>KappaGen settings</h1>
+			<h2>General settings</h2>
+			<ul>
+				<li>
+					<md-checkbox ng-model="settings.bttv" ng-change="onchange()">use BTTV emotes</md-checkbox>
+					<ul>
+						<li><md-checkbox ng-model="settings.gif" ng-disabled="!settings.bttv" ng-change="onchange()">allow gif emotes</md-checkbox></li>
+					</ul>
+				</li>
+				<li><md-checkbox ng-model="settings.ffz" ng-change="onchange()">use FFZ emotes</md-checkbox></li>
+				<li><md-checkbox ng-model="settings.channelonly" ng-change="onchange()">Only emotes from this channel</md-checkbox></li>
+				<li><md-checkbox ng-model="settings.mods" ng-change="onchange()">Allow chat moderators to use chat commands</md-checkbox></li>
+				<li layout="row">
+					<md-slider flex ng-model="settings.size" min="12" max="255" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+					<div class="sliderval" flex="none" layout-padding layout-align="center center">
+						<span>emote size: {{settings.size}} pixels</span>
+						<img src="https://static-cdn.jtvnw.net/emoticons/v1/55338/3.0" style="height: {{settings.size}}px;" class="kappapride">
+					</div>
+				</li>
+			</ul>
+			<h2>Integration settings</h2>
+			<ul>
+				<li ng-hide="gamewisp">
+					<md-button class="md-raised image-button" ng-href="{{gw_connect()}}"><img src="GameWisp_Small_Grey.png" class="gw-icon"></md-button>
+				</li>
+				<li ng-show="gamewisp">
+					<md-button class="md-raised image-button" ng-click="gw_disconnect()">Disconnect gamewisp ({{gamewisp.name}})</md-button>
+				</li>
+			</ul>
+			<h2><md-checkbox ng-model="settings.chatemotes" ng-change="onchange()">Chat emotes</md-checkbox></h2>
+			<ul ng-show="settings.chatemotes">
+				<li layout="row">
+					<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.animation" ng-change="onchange()" class="inlineselect">
+						<md-option value="zoom">zoom</md-option>
+						<md-option value="bubble">bubble</md-option>
+						<md-option value="blur">blur</md-option>
+						<md-option value="bounce">bounce</md-option>
+						<md-option value="random">random</md-option>
+					</md-select></span>
+				</li>
+				<li><md-checkbox ng-model="settings.once" ng-change="onchange()">Show each emote only once per message</md-checkbox></li>
+				<li><md-checkbox ng-model="settings.subonly" ng-change="onchange()">Subscribers only</md-checkbox></li>
+				<li layout="row">
+					<md-slider flex ng-model="settings.limit" ratelimit min="1" max="120" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+					<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>{{getRateLimit()}}</span></div>
+				</li>
+				<li layout="row">
+					<md-slider flex ng-model="settings.duration" min="1" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+					<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration on screen: {{settings.duration}}s</span></div>
+				</li>
+				<li>
+					<div layout="row" layout-wrap="wrap">
+						<div flex="75" class="twocolumn" ng-show="defaults.spawnzone[settings.animation]">
+							<h4>Spawn zone:</h4>
+							<div layout="row">
+								<div flex="none">
+									<rectangle-input ng-model="settings.spawnzone[settings.animation]" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
+								</div>
+								<div flex="100" layout-padding>
+									Select an area in which emotes can spawn. Keep in mind that emotes can leave the spawn zone. <br>
+									Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
+								</div>
+							</div>
+						</div>
+						<!--<div flex="50" class="twocolumn" ng-show="false"> disabled for now 
+							<h4>Bubble direction:</h4>
+							<div layout="row">
+								<div flex="none">
+									<direction-input ng-model="settings.direction" mode="'direction'" circle-stroke="{strokeStyle:'#000'}" arrow-stroke="{strokeStyle:'#F00',fillStyle:'#F00'}"></direction-input>
+								</div>
+								<div flex="100" layout-padding>
+									Select a direction in which emote bubbles move.
+								</div>
+							</div>
+						</div>-->
+					</div>
+				</li>
+			</ul>
+			<h2><md-checkbox ng-model="settings.emotesplosions" ng-change="onchange()">Emotesplosions (follower/subscriber alerts)</md-checkbox></h2>
+			<ul ng-show="settings.emotesplosions">
+				<li layout="row">
+					<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.emotesplosiontype" ng-change="onchange()" class="inlineselect">
+						<md-option value="explosion">explosion</md-option>
+						<md-option value="firework">firework</md-option>
+						<md-option value="fountain">fountain</md-option>
+						<md-option value="bubbles">bubbles</md-option>
+						<md-option value="random">random</md-option>
+					</md-select></span>
+				</li>
+				<li layout="row">
+					<md-slider flex ng-model="settings.emotesplosionduration" min="0" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+					<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration: {{settings.emotesplosionduration}}s</span></div>
+				</li>
+				<li layout="row">
+				</li>
+				<li layout="row">
+					<md-slider flex ng-model="settings.emotesplosion" min="1" max="1000" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
+					<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>Emote count 
+						 ({{settings.emotesplosion}} random sub<span ng-if="settings.ffz">+ffz</span><span ng-if="settings.bttv">+bttv</span><span ng-if="settings.bttv && settings.gif">+gif</span> emote<span ng-if="settings.emotesplosion!=1">s</span> from this channel) when someone 
+						<md-select ng-model="settings.emotesplosiontriggers" ng-change="onchange()" class="inlineselect">
+							<md-option value="follower">follows</md-option>
+							<md-option value="subscriber">subscribes</md-option>
+							<md-option value="follower+subscriber">follows or subscribes</md-option>
+						</md-select>
+					</span></div>
+				</li>
+				<li>
+					<div layout="row" layout-wrap="wrap">
+						<div flex="50" class="twocolumn" ng-show="defaults.emotesplosionzone[settings.emotesplosiontype]">
+							<h4>Emotesplosion zone:</h4>
+							<div layout="row">
+								<div flex="none">
+									<rectangle-input ng-model="settings.emotesplosionzone[settings.emotesplosiontype]" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
+								</div>
+								<div flex="100" layout-padding>
+									Select an area in which emotesplosions can happen.<br>
+									Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
+								</div>
+							</div>
+						</div>
+						<!--<div flex="50" class="twocolumn" ng-show="false"> disabled for now
+							<h4>Emotesplosion direction:</h4>
+							<div layout="row">
+								<div flex="none">
+									<direction-input ng-model="settings.emotesplosiondir" mode="'direction'" circle-stroke="{strokeStyle:'#000'}" arrow-stroke="{strokeStyle:'#F00',fillStyle:'#F00'}"></direction-input>
+								</div>
+								<div flex="100" layout-padding>
+									Select a direction in which emotes from emotesplosions move.
+								</div>
+							</div>
+						</div>-->
+					</div>
+				</li>
+			</ul>
+			<h2><md-checkbox ng-model="cloudsync" ng-change="onchange()">Sync settings via the cloud</md-checkbox></h2>
+			<ul>
+				<li><md-input-container><input type="text" ng-model="channel" placeholder="Channel name"></input></md-input-container></li>
+			</ul>
+			<div style="margin: 8px;"><md-button ng-click="resetSettings()" class="md-raised md-primary smallbutton">Reset to default</md-button> <md-button class="md-raised md-primary smallbutton" ng-click="importSettings($event)">Import settings from cloud</md-button></div>
+			<div class="md-whiteframe-3dp layout-padding box">
+				<div flex="none">
+					Resulting URL:&nbsp; <strong id="urlres" ng-bind-html="buildUrl()"></strong>
+					<md-button ngclipboard data-clipboard-target="#urlres" class="md-icon-button btn" ng-show="channel">
+						<md-icon class="md-primary">content_copy</md-icon>
+						<md-tooltip>Copy</md-tooltip>
+					</md-button>
+				</div>
+				<div ng-show="cloudsync">Do not show the link (especially the blurred ID) to anyone you do not trust! It can be used to modify your settings!</div>
+				<div>Add a CLR-Browser to your global scenes and set it to show that page. <span ng-hide="cloudsync">You have to copy the link <strong>every time you change a setting!</strong></span><br>Alternatively, use these chat commands:</div>
 				<ul>
-					<li><md-checkbox ng-model="settings.gif" ng-disabled="!settings.bttv" ng-change="onchange()">allow gif emotes</md-checkbox></li>
+					<li ng-repeat="(key, val) in settings" ng-if="key != 'v' && key != 'ch' && key != 'gamewisp' && val != defaults[key] && (typeof(defaults[key]) != 'object')"><code>!kappagen {{key}} {{val}}</code></li>
 				</ul>
-			</li>
-			<li><md-checkbox ng-model="settings.ffz" ng-change="onchange()">use FFZ emotes</md-checkbox></li>
-			<li><md-checkbox ng-model="settings.channelonly" ng-change="onchange()">Only emotes from this channel</md-checkbox></li>
-			<li><md-checkbox ng-model="settings.mods" ng-change="onchange()">Allow chat moderators to use chat commands</md-checkbox></li>
-			<li layout="row">
-				<md-slider flex ng-model="settings.size" min="12" max="255" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center">
-					<span>emote size: {{settings.size}} pixels</span>
-					<img src="https://static-cdn.jtvnw.net/emoticons/v1/55338/3.0" style="height: {{settings.size}}px;" class="kappapride">
-				</div>
-			</li>
-		</ul>
-		<h2>Integration settings</h2>
-		<ul>
-			<li ng-hide="gamewisp">
-				<md-button class="md-raised image-button" ng-href="{{gw_connect()}}"><img src="GameWisp_Small_Grey.png" class="gw-icon"></md-button>
-			</li>
-			<li ng-show="gamewisp">
-				<md-button class="md-raised image-button" ng-click="gw_disconnect()">Disconnect gamewisp ({{gamewisp.name}})</md-button>
-			</li>
-		</ul>
-		<h2><md-checkbox ng-model="settings.chatemotes" ng-change="onchange()">Chat emotes</md-checkbox></h2>
-		<ul ng-show="settings.chatemotes">
-			<li layout="row">
-				<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.animation" ng-change="onchange()" class="inlineselect">
-					<md-option value="zoom">zoom</md-option>
-					<md-option value="bubble">bubble</md-option>
-					<md-option value="blur">blur</md-option>
-					<md-option value="bounce">bounce</md-option>
-					<md-option value="random">random</md-option>
-				</md-select></span>
-			</li>
-			<li><md-checkbox ng-model="settings.once" ng-change="onchange()">Show each emote only once per message</md-checkbox></li>
-			<li><md-checkbox ng-model="settings.subonly" ng-change="onchange()">Subscribers only</md-checkbox></li>
-			<li layout="row">
-				<md-slider flex ng-model="settings.limit" ratelimit min="1" max="120" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>{{getRateLimit()}}</span></div>
-			</li>
-			<li layout="row">
-				<md-slider flex ng-model="settings.duration" min="1" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration on screen: {{settings.duration}}s</span></div>
-			</li>
-			<li>
-				<div layout="row" layout-wrap="wrap">
-					<div flex="75" class="twocolumn" ng-show="defaults.spawnzone[settings.animation]">
-						<h4>Spawn zone:</h4>
-						<div layout="row">
-							<div flex="none">
-								<rectangle-input ng-model="settings.spawnzone[settings.animation]" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
-							</div>
-							<div flex="100" layout-padding>
-								Select an area in which emotes can spawn. Keep in mind that emotes can leave the spawn zone. <br>
-								Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
-							</div>
-						</div>
-					</div>
-					<!--<div flex="50" class="twocolumn" ng-show="false"> disabled for now 
-						<h4>Bubble direction:</h4>
-						<div layout="row">
-							<div flex="none">
-								<direction-input ng-model="settings.direction" mode="'direction'" circle-stroke="{strokeStyle:'#000'}" arrow-stroke="{strokeStyle:'#F00',fillStyle:'#F00'}"></direction-input>
-							</div>
-							<div flex="100" layout-padding>
-								Select a direction in which emote bubbles move.
-							</div>
-						</div>
-					</div>-->
-				</div>
-			</li>
-		</ul>
-		<h2><md-checkbox ng-model="settings.emotesplosions" ng-change="onchange()">Emotesplosions (follower/subscriber alerts)</md-checkbox></h2>
-		<ul ng-show="settings.emotesplosions">
-			<li layout="row">
-				<span layout-padding layout-align="center center">Animation: <md-select ng-model="settings.emotesplosiontype" ng-change="onchange()" class="inlineselect">
-					<md-option value="explosion">explosion</md-option>
-					<md-option value="firework">firework</md-option>
-					<md-option value="fountain">fountain</md-option>
-					<md-option value="bubbles">bubbles</md-option>
-					<md-option value="random">random</md-option>
-				</md-select></span>
-			</li>
-			<li layout="row">
-				<md-slider flex ng-model="settings.emotesplosionduration" min="0" max="60" step="0.1" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>duration: {{settings.emotesplosionduration}}s</span></div>
-			</li>
-			<li layout="row">
-			</li>
-			<li layout="row">
-				<md-slider flex ng-model="settings.emotesplosion" min="1" max="1000" class="slider" flex="50" layout-align="center center" ng-change="onchange()"></md-slider>
-				<div class="sliderval" flex="none" layout-padding layout-align="center center"><span>Emote count 
-					 ({{settings.emotesplosion}} random sub<span ng-if="settings.ffz">+ffz</span><span ng-if="settings.bttv">+bttv</span><span ng-if="settings.bttv && settings.gif">+gif</span> emote<span ng-if="settings.emotesplosion!=1">s</span> from this channel) when someone 
-					<md-select ng-model="settings.emotesplosiontriggers" ng-change="onchange()" class="inlineselect">
-						<md-option value="follower">follows</md-option>
-						<md-option value="subscriber">subscribes</md-option>
-						<md-option value="follower+subscriber">follows or subscribes</md-option>
-					</md-select>
-				</span></div>
-			</li>
-			<li>
-				<div layout="row" layout-wrap="wrap">
-					<div flex="50" class="twocolumn" ng-show="defaults.emotesplosionzone[settings.emotesplosiontype]">
-						<h4>Emotesplosion zone:</h4>
-						<div layout="row">
-							<div flex="none">
-								<rectangle-input ng-model="settings.emotesplosionzone[settings.emotesplosiontype]" stroke="{strokeStyle:'#F00'}" style="border: 1px solid black"></rectangle-input>
-							</div>
-							<div flex="100" layout-padding>
-								Select an area in which emotesplosions can happen.<br>
-								Drag a rectangle in the box to select your spawn zone, the whole box represents your entire screen. Clicking selects a single point, double clicking the entire screen.
-							</div>
-						</div>
-					</div>
-					<!--<div flex="50" class="twocolumn" ng-show="false"> disabled for now
-						<h4>Emotesplosion direction:</h4>
-						<div layout="row">
-							<div flex="none">
-								<direction-input ng-model="settings.emotesplosiondir" mode="'direction'" circle-stroke="{strokeStyle:'#000'}" arrow-stroke="{strokeStyle:'#F00',fillStyle:'#F00'}"></direction-input>
-							</div>
-							<div flex="100" layout-padding>
-								Select a direction in which emotes from emotesplosions move.
-							</div>
-						</div>
-					</div>-->
-				</div>
-			</li>
-		</ul>
-		<h2><md-checkbox ng-model="cloudsync" ng-change="onchange()">Sync settings via the cloud</md-checkbox></h2>
-		<ul>
-			<li><md-input-container><input type="text" ng-model="channel" placeholder="Channel name"></input></md-input-container></li>
-		</ul>
-		<div style="margin: 8px;"><md-button ng-click="resetSettings()" class="md-raised md-primary smallbutton">Reset to default</md-button> <md-button class="md-raised md-primary smallbutton" ng-click="importSettings($event)">Import settings from cloud</md-button></div>
-		<div class="md-whiteframe-3dp layout-padding box">
-			<div flex="none">
-				Resulting URL:&nbsp; <strong id="urlres" ng-bind-html="buildUrl()"></strong>
-				<md-button ngclipboard data-clipboard-target="#urlres" class="md-icon-button btn" ng-show="channel">
-					<md-icon class="md-primary">content_copy</md-icon>
-					<md-tooltip>Copy</md-tooltip>
-				</md-button>
+				<span>And some commands to test your emotesplosions:</span>
+				<ul>
+					<li><code>!kappagen emotesplosiontest</code></li>
+					<li><code>!kappagen customsplosion <emotes...></code></li>
+				</ul>
 			</div>
-			<div ng-show="cloudsync">Do not show the link (especially the blurred ID) to anyone you do not trust! It can be used to modify your settings!</div>
-			<div>Add a CLR-Browser to your global scenes and set it to show that page. <span ng-hide="cloudsync">You have to copy the link <strong>every time you change a setting!</strong></span><br>Alternatively, use these chat commands:</div>
-			<ul>
-				<li ng-repeat="(key, val) in settings" ng-if="key != 'v' && key != 'ch' && key != 'gamewisp' && val != defaults[key] && (typeof(defaults[key]) != 'object')"><code>!kappagen {{key}} {{val}}</code></li>
-			</ul>
-			<span>And some commands to test your emotesplosions:</span>
-			<ul>
-				<li><code>!kappagen emotesplosiontest</code></li>
-				<li><code>!kappagen customsplosion <emotes...></code></li>
-			</ul>
 		</div>
 	</div>
 	<div class="md-whiteframe-3dp footer">
