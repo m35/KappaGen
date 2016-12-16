@@ -66,7 +66,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			if(ratelimit != 0)addUserAccount(user, ratelimit+10); // +10 to account for execution time, preventing limit violations.
 			
 			var animationparams = initializers[$scope.settings.animation](ctx, $scope.settings);
-			var img = new ImageEx(emote.url, emote.type == "gif" || emote.type == "bits");
+			var img = new ImageEx(emote.url, emote.type == "gif" || emote.type == "bits-animated");
 			img.onload = function() {
 				animatedemotes.push({url: emote.url, animation: animationparams, start: performance.now(), img: this, w: this.width, h: this.height, type: emote.type});
 			}
@@ -265,7 +265,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 										if(foundbits[url] && $scope.settings.once) break; // this bit has already been found, skip.
 										total -= bits;
 										foundbits[url] = true;
-										drawEmote(extmsg.nick, {url: CORSProvider + url, type: "bits", channel: false});
+										drawEmote(extmsg.nick, {url: CORSProvider + url, type: "bits-"+state, channel: false});
 										break; // were done here.
 									}
 								}
