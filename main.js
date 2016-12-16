@@ -1,4 +1,4 @@
-var CORSProvider = "//cbenni.com/cors-proxy/https:";
+var CORSProvider = "//cbenni.com/cors-proxy/";
 
 function log(msg) {
 	console.log(msg);
@@ -315,7 +315,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		for(var i=0;i<response.data.emotes.length;++i){
 			var emote = response.data.emotes[i];
 			if(emote.imageType == "gif") {
-				var emote = {"url": CORSProvider + response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "gif", code: emote.code, "channel": false};
+				var emote = {"url": CORSProvider + "https://" + response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "gif", code: emote.code, "channel": false};
 			} else {
 				var emote = {"url": response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "bttv", code: emote.code, "channel": false};
 			}
@@ -327,7 +327,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		for(var i=0;i<response.data.emotes.length;++i){
 			var emote = response.data.emotes[i];
 			if(emote.imageType == "gif") {
-				var emote = {"url": CORSProvider + response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "gif", code: emote.code, "channel": true};
+				var emote = {"url": CORSProvider + "https://" + response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "gif", code: emote.code, "channel": true};
 			} else {
 				var emote = {"url": response.data.urlTemplate.replace("{{id}}",emote.id).replace("{{image}}","3x"), type: "bttv", code: emote.code, "channel": true};
 			}
