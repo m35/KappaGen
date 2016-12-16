@@ -353,7 +353,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			var background = "light";
 			if(action.states && action.states.indexOf(state) < 0) state = action.states[0];
 			if(action.backgrounds && action.backgrounds.indexOf(background) < 0) background = action.backgrounds[0];
-			bitEmotes.push({"regexp":new RegExp("^("+action.prefix+")(\\d+)$"), tiers: action.tiers, prefix: action.prefix, scale: scale, state: state, background: background});
+			bitEmotes.push({"regexp":new RegExp("^("+action.prefix+")(\\d+)$","i"), tiers: action.tiers, prefix: action.prefix, scale: scale, state: state, background: background});
 		}
 	}
 	
