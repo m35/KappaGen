@@ -265,7 +265,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 										if(foundbits[url] && $scope.settings.once) break; // this bit has already been found, skip.
 										total -= bits;
 										foundbits[url] = true;
-										drawEmote(extmsg.nick, {url: url, type: "bits", channel: false});
+										drawEmote(extmsg.nick, {url: CORSProvider + url, type: "bits", channel: false});
 										break; // were done here.
 									}
 								}
