@@ -90,7 +90,19 @@ var ImageEx = function(src, isAnim) {
 					self.frameInfos.push(frameinfo);
 					
 					// the next frame overdraws if this frame has a dispose that is equal to 1
-					overdraws = frameinfo.disposal == 1;
+					overdraws = frameinfo.disposal >= 1;
+					if(frameinfo.disposal == 2) {
+						// we reset to background (frame 0)
+						var framecanvas = document.createElement("canvas");
+						framecanvas.width = decoder.width;
+						framecanvas.height = decoder.height;
+						var framectx = framecanvas.getContext("2d");
+						// render the imagedata to the temp canvas
+						var imagedata = framectx.createImageData(decoder.width, decoder.height);
+						decoder.decodeAndBlitFrameRGBA(0, imagedata.data); // Decode 0th frame
+						framectx.putImageData(imagedata, 0, 0);
+					}
+					console.log("Frame "+self.frameInfos.length+" has disposal "+frameinfo.disposal);
 				}
 				self.totalLength = offset;
 				_imageCache[src] = { width: self.width, height: self.height, totalLength: self.totalLength, frameInfos: self.frameInfos };

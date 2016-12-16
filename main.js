@@ -1,4 +1,5 @@
 var CORSProvider = "//cbenni.com/cors-proxy/";
+//var CORSProvider = "//127.0.0.1:9003/";
 
 function log(msg) {
 	console.log(msg);
