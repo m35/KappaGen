@@ -261,7 +261,8 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 								for(var k=bitEmote.tiers.length-1;k>=0;--k) {
 									var tier = bitEmote.tiers[k];
 									if(tier.min_bits <= bits) {
-										var url = tier.images[bitEmote.background][$scope.settings.staticbits?"static":bitEmote.state][bitEmote.scale];
+										var state = $scope.settings.staticbits?"static":bitEmote.state;
+										var url = tier.images[bitEmote.background][state][bitEmote.scale];
 										if(foundbits[url] && $scope.settings.once) break; // this bit has already been found, skip.
 										total -= bits;
 										foundbits[url] = true;
