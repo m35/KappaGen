@@ -3,6 +3,8 @@
 
 defaults = {
 	v: 2,
+	bits: true,
+	staticbits: false,
 	ffz: true,
 	bttv: true,
 	gif: true,

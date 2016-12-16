@@ -36,6 +36,12 @@
 			<h2>General settings</h2>
 			<ul>
 				<li>
+					<md-checkbox ng-model="settings.bits" ng-change="onchange()">use cheer emotes</md-checkbox>
+					<ul>
+						<li><md-checkbox ng-model="settings.staticbits" ng-disabled="!settings.bits" ng-change="onchange()">use static cheer emotes</md-checkbox></li>
+					</ul>
+				</li>
+				<li>
 					<md-checkbox ng-model="settings.bttv" ng-change="onchange()">use BTTV emotes</md-checkbox>
 					<ul>
 						<li><md-checkbox ng-model="settings.gif" ng-disabled="!settings.bttv" ng-change="onchange()">allow gif emotes</md-checkbox></li>

@@ -1,4 +1,4 @@
-var CORSProvider = "//cbenni.com/cors-proxy/]https:";
+var CORSProvider = "//cbenni.com/cors-proxy/https:";
 
 function log(msg) {
 	console.log(msg);
@@ -28,7 +28,8 @@ if (!String.prototype.startsWith) {
 	  return this.substr(position, searchString.length) === searchString;
   };
 }
-
+// global handleMessage for debug
+_handleMessage = null;
 alertify.logPosition("top right");
 
 var app = angular.module("app",["firebase"]);
@@ -65,7 +66,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			if(ratelimit != 0)addUserAccount(user, ratelimit+10); // +10 to account for execution time, preventing limit violations.
 			
 			var animationparams = initializers[$scope.settings.animation](ctx, $scope.settings);
-			var img = new ImageEx(emote.url, emote.type == "gif");
+			var img = new ImageEx(emote.url, emote.type == "gif" || emote.type == "bits");
 			img.onload = function() {
 				animatedemotes.push({url: emote.url, animation: animationparams, start: performance.now(), img: this, w: this.width, h: this.height, type: emote.type});
 			}
@@ -239,6 +240,41 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 					}
 				}
 			}
+			// Find bits... fml
+			var foundbits = {};
+			// check if bits are enabled and this message contains any bits
+			if($scope.settings.bits && parsedmessage[STATE_V3] && parseInt(parsedmessage[STATE_V3].bits) > 0) {
+				// get the total, just double checking for exploits
+				var total = parseInt(parsedmessage[STATE_V3].bits);
+				// iterate over the words of the message
+				for(var i=0;i<words.length;++i) {
+					var word = words[i];
+					// for each word, iterate over the different cheer types we have
+					for(var j=0;j<bitEmotes.length;++j) {
+						var bitEmote = bitEmotes[j];
+						var match = bitEmote.regexp.exec(word);
+						if(match) {
+							var prefix = parseInt(match[1]);
+							var bits = parseInt(match[2]);
+							if(total >= bits) {
+								// if enough bits remain, find the correct tier to use.
+								for(var k=bitEmote.tiers.length-1;k>=0;--k) {
+									var tier = bitEmote.tiers[k];
+									if(tier.min_bits <= bits) {
+										var url = tier.images[bitEmote.background][$scope.settings.staticbits?"static":bitEmote.state][bitEmote.scale];
+										if(foundbits[url] && $scope.settings.once) break; // this bit has already been found, skip.
+										total -= bits;
+										foundbits[url] = true;
+										drawEmote(extmsg.nick, {url: url, type: "bits", channel: false});
+										break; // were done here.
+									}
+								}
+							}
+							break; // next word
+						}
+					}
+				}
+			}
 		}
 		else if (parsedmessage[STATE_COMMAND] == "USERNOTICE") {
 			if(parsedmessage[STATE_V3]
@@ -248,7 +284,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			}
 		}
 	}
-
+	_handleMessage = handleMessage;
 
 	extraEmotes = {};
 	function loadFFZ(response) {
@@ -307,6 +343,19 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			globalEmotes.push({"url":"//static-cdn.jtvnw.net/emoticons/v1/"+emote.id+"/3.0", type: emote.imageType == "global", "channel": false});
 		}
 	}
+	var bitEmotes = [];
+	function loadBits(response) {
+		bitEmotes = [];
+		for(var i=0;i<response.data.actions.length;++i) {
+			var action = response.data.actions[i];
+			var scale = action.scales[action.scales.length-1];
+			var state = "animated";
+			var background = "light";
+			if(action.states && action.states.indexOf(state) < 0) state = action.states[0];
+			if(action.backgrounds && action.backgrounds.indexOf(background) < 0) background = action.backgrounds[0];
+			bitEmotes.push({"regexp":new RegExp("^("+action.prefix+")(\\d+)$"), tiers: action.tiers, prefix: action.prefix, scale: scale, state: state, background: background});
+		}
+	}
 	
 	
 	var getEmotesplosionTriggers = function(type) {
@@ -354,7 +403,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 	}
 	$http.get("//api.frankerfacez.com/v1/set/global").then(loadFFZ);
 	$http.jsonp("//api.twitch.tv/kraken/chat/emoticon_images?emotesets=0&client_id="+twitchAuth.clientId+"&callback=JSON_CALLBACK").then(loadGlobalEmotes);
-	
+	$http.jsonp("https://api.twitch.tv/kraken/bits/actions?client_id="+twitchAuth.clientId+"&callback=JSON_CALLBACK&api_version=5").then(loadBits);
 	var id2SubEmote = {};
 	var subEmotes = {"sub":[], "ffz":[], "bttv":[], "gif": []};
 	$http.jsonp("//api.twitch.tv/api/channels/"+channel+"/product?callback=JSON_CALLBACK&client_id="+twitchAuth.clientId).then(function( response ) {
