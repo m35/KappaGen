@@ -54,56 +54,77 @@ var ImageEx = function(src, isAnim) {
 				var framecanvas = document.createElement("canvas");
 				framecanvas.width = decoder.width;
 				framecanvas.height = decoder.height;
-				var overdraws = false;
-				// for each frame
+				var framectx = framecanvas.getContext("2d");
+				var framedata = framectx.getImageData(0,0,decoder.width,decoder.height);
+				
+				var pixels = decoder.width * decoder.height;
+				var lastdisposal = 0;
+				var mask;
 				for(var i=0;i<len;++i) {
+					// build the frame info
+					var frameinfo = decoder.frameInfo(i);
+					
+					// if disposal is 3, we backup the framedata
+					if(frameinfo.disposal == 3) {
+						var framedataCopy = new Uint8ClampedArray(framedata.data.length);
+					}
+					
 					// make a temporary canvas
 					var tmpcanvas = document.createElement("canvas");
 					tmpcanvas.width = decoder.width;
 					tmpcanvas.height = decoder.height;
 					var tmpctx = tmpcanvas.getContext("2d");
-					// render the imagedata to the temp canvas
-					var imagedata = tmpctx.createImageData(decoder.width, decoder.height);
-					decoder.decodeAndBlitFrameRGBA(i, imagedata.data); // Decode 0th frame
-					tmpctx.putImageData(imagedata, 0, 0);
-					
-					// render the temp canvas to the frame canvas if needed
-					if(overdraws) {
-						// we draw the temp canvas over the frame one.
-						var framectx = framecanvas.getContext("2d");
-						framectx.drawImage(tmpcanvas,0,0);
-					} else {
-						// otherwise we swap out the framecanvas with the temp one
-						framecanvas = tmpcanvas;
+					// blit the imagedata to the temp canvas
+					var tmpdata = tmpctx.getImageData(0,0,decoder.width,decoder.height).data;
+					decoder.decodeAndBlitFrameRGBA(i, tmpdata); // Decode frame
+					// iterate over all the pixels
+					for(var j=0;j<pixels;++j) {
+						// apply mask if the disposal method was 2
+						if(lastdisposal == 2) {
+							// get the alpha value
+							var alpha = mask[j*4+3];
+							if(alpha > 0) {
+								// clear the pixel
+								framedata.data[j*4] = 0;
+								framedata.data[j*4+1] = 0;
+								framedata.data[j*4+2] = 0;
+								framedata.data[j*4+3] = 0;
+							}
+						}
+						// draw the new pixel
+						// get the alpha value
+						var alpha = tmpdata[j*4+3];
+						if(alpha > 0) {
+							// set the pixel
+							framedata.data[j*4] = tmpdata[j*4];
+							framedata.data[j*4+1] = tmpdata[j*4+1];
+							framedata.data[j*4+2] = tmpdata[j*4+2];
+							framedata.data[j*4+3] = tmpdata[j*4+3];
+						}
 					}
 					
-					var tmpimg = new Image();
-					tmpimg.src = framecanvas.toDataURL("image/png");
-					// build the frame info
-					var frameinfo = decoder.frameInfo(i);
+					// draw the framedata to the framecanvas and get the data url
+					framectx.putImageData(framedata, 0, 0);
+					var frameimg = new Image();
+					frameimg.src = framecanvas.toDataURL("image/png");
+					
 					frameinfo.offset = offset;
 					if(frameinfo.delay <= 1) frameinfo.delay = 10;
 					frameinfo.delay *= 10; // turn the delay into ms (usually cs)
 					offset += frameinfo.delay;
 					frameinfo.end = offset;
-					frameinfo.img = tmpimg;
-					self.frameInfos.push(frameinfo);
-					
-					// the next frame overdraws if this frame has a dispose that is equal to 1
-					overdraws = frameinfo.disposal >= 1;
+					frameinfo.img = frameimg;
+					lastdisposal = frameinfo.disposal;
 					if(frameinfo.disposal == 2) {
-						// we reset to background (frame 0)
-						var framecanvas = document.createElement("canvas");
-						framecanvas.width = decoder.width;
-						framecanvas.height = decoder.height;
-						var framectx = framecanvas.getContext("2d");
-						// render the imagedata to the temp canvas
-						var imagedata = framectx.createImageData(decoder.width, decoder.height);
-						decoder.decodeAndBlitFrameRGBA(0, imagedata.data); // Decode 0th frame
-						framectx.putImageData(imagedata, 0, 0);
+						// store the mask
+						mask = tmpdata;
+					} else if(frameinfo.disposal == 3) {
+						framedata.data.set(framedataCopy);
 					}
-					console.log("Frame "+self.frameInfos.length+" has disposal "+frameinfo.disposal);
+					
+					self.frameInfos.push(frameinfo);
 				}
+				
 				self.totalLength = offset;
 				_imageCache[src] = { width: self.width, height: self.height, totalLength: self.totalLength, frameInfos: self.frameInfos };
 				for(var i=0;i<self.waiting.length; ++i) {
