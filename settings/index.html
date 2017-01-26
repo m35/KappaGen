@@ -36,19 +36,19 @@
 			<h2>General settings</h2>
 			<ul>
 				<li>
-					<md-checkbox ng-model="settings.bits" ng-change="onchange()">use cheer emotes</md-checkbox>
+					<md-checkbox ng-model="settings.bits" ng-change="onchange()">Use cheer emotes</md-checkbox>
 					<ul>
-						<li><md-checkbox ng-model="settings.staticbits" ng-disabled="!settings.bits" ng-change="onchange()">use static cheer emotes</md-checkbox></li>
+						<li><md-checkbox ng-model="settings.staticbits" ng-disabled="!settings.bits" ng-change="onchange()">Use static cheer emotes</md-checkbox></li>
 						<li><md-checkbox ng-model="settings.cheersplosions" ng-disabled="!settings.bits" ng-change="onchange()">Show cheersplosions</md-checkbox></li>
 					</ul>
 				</li>
 				<li>
-					<md-checkbox ng-model="settings.bttv" ng-change="onchange()">use BTTV emotes</md-checkbox>
+					<md-checkbox ng-model="settings.bttv" ng-change="onchange()">Use BTTV emotes</md-checkbox>
 					<ul>
-						<li><md-checkbox ng-model="settings.gif" ng-disabled="!settings.bttv" ng-change="onchange()">allow gif emotes</md-checkbox></li>
+						<li><md-checkbox ng-model="settings.gif" ng-disabled="!settings.bttv" ng-change="onchange()">Allow gif emotes</md-checkbox></li>
 					</ul>
 				</li>
-				<li><md-checkbox ng-model="settings.ffz" ng-change="onchange()">use FFZ emotes</md-checkbox></li>
+				<li><md-checkbox ng-model="settings.ffz" ng-change="onchange()">Use FFZ emotes</md-checkbox></li>
 				<li><md-checkbox ng-model="settings.channelonly" ng-change="onchange()">Only emotes from this channel</md-checkbox></li>
 				<li><md-checkbox ng-model="settings.mods" ng-change="onchange()">Allow chat moderators to use chat commands</md-checkbox></li>
 				<li layout="row">
