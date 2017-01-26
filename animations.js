@@ -172,16 +172,16 @@ animations = {
 
 		
 emotesplosions = {
-	random: function(ctx, settings, allowedEmotes, animatedemotes) {
+	random: function(ctx, settings, allowedEmotes, animatedemotes, count) {
 		var est = ["explosion","fountain","firework","bubbles"];
-		emotesplosions[est[Math.floor(Math.random()*est.length)]](ctx, settings, allowedEmotes, animatedemotes);
+		emotesplosions[est[Math.floor(Math.random()*est.length)]](ctx, settings, allowedEmotes, animatedemotes, count);
 	},
-	explosion: function (ctx, settings, allowedEmotes, animatedemotes) {
+	explosion: function(ctx, settings, allowedEmotes, animatedemotes, count) {
 		var pos = getSpawn(ctx, settings.emotesplosionzone["firework"]);
 		var fdx = Math.max(pos[0], ctx.canvas.width-pos[0]);
 		var fdy = Math.max(pos[1], ctx.canvas.height-pos[1]);
 		var initialspeed = Math.max(fdx, fdy);
-		for(var i=1;i<settings.emotesplosion;++i) {
+		for(var i=0;i<count;++i) {
 			emote = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
 			var velocity = initialspeed * (2+Math.random())/2; // randomize initial velocity
 			// choose some initial direction
@@ -192,7 +192,7 @@ emotesplosions = {
 			vx *= nf;
 			vy *= nf;
 			var ap = {"type": "explosion", x: pos[0], y: pos[1], vx: vx, vy: vy, duration: settings.duration, id: i}
-			var img = new ImageEx(emote.url, emote.type == "gif");
+			var img = new ImageEx(emote.url, emote.type == "gif" || emote.type == "bits-animated");
 			img.onload = function(that) { 
 				return function() {
 					animatedemotes.push({
@@ -200,21 +200,21 @@ emotesplosions = {
 						img: this,
 						type: emote.type,
 						w: this.width, h: this.height,
-						start: performance.now()+that.id*settings.emotesplosionduration*1000/settings.emotesplosion
+						start: performance.now()+that.id*settings.emotesplosionduration*1000/Math.max(settings.emotesplosion, count)
 					});
 				}
 			}(ap);
 		}
 	},
 
-	firework: function (ctx, settings, allowedEmotes, animatedemotes) {
+	firework: function(ctx, settings, allowedEmotes, animatedemotes, count) {
 		var sparks = [];
 		var emote;
 		var pos = getSpawn(ctx, settings.emotesplosionzone["firework"]);
 		var fdx = Math.max(pos[0], ctx.canvas.width-pos[0]);
 		var fdy = Math.max(pos[1], ctx.canvas.height-pos[1]);
 		var initialspeed = Math.max(fdx, fdy);
-		for(var i=1;i<settings.emotesplosion;++i) {
+		for(var i=0;i<count;++i) {
 			emote = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
 			
 			var velocity = initialspeed * Math.random(); // randomize initial velocity
@@ -228,7 +228,7 @@ emotesplosions = {
 			
 			var ap = {"type": "fireworkspark", x: pos[0], y: pos[1], vx: vx, vy: vy, duration: 0.8*settings.emotesplosionduration, id: i}
 			
-			var img = new ImageEx(emote.url, emote.type == "gif");
+			var img = new ImageEx(emote.url, emote.type == "gif" || emote.type == "bits-animated");
 			img.onload = function(that) { 
 				return function() {
 					sparks.push({url: this.src, animation: that, img: this, w: this.width, h: this.height, type: emote.type});
@@ -248,7 +248,7 @@ emotesplosions = {
 			sparks: sparks,
 			id: -1
 		};
-		var img = new ImageEx(emote.url, emote.type == "gif");
+		var img = new ImageEx(emote.url, emote.type == "gif" || emote.type == "bits-animated");
 		img.onload = function() {
 			animatedemotes.push({
 				animation: projap, 
@@ -266,14 +266,14 @@ emotesplosions = {
 		}
 	},
 	
-	fountain: function (ctx, settings, allowedEmotes, animatedemotes) {
+	fountain: function(ctx, settings, allowedEmotes, animatedemotes, count) {
 		var pos = getSpawn(ctx, settings.emotesplosionzone["fountain"]);
 		var y0 = pos[1]; // start y value
 		var y1 = 0; // peak y value (yes, it is zero, since its the highest an emote can apex at)
 		var y2 = ctx.canvas.height+settings.size; // final y value (below the lower edge of the screen)
 		var v0 = -2*(y0+Math.sqrt(y2*y0)); // initial maximum velocity
 		var gravity = 2*(y2-v0-y0);//2*y2 - 2*v0;
-		for(var i=0;i<settings.emotesplosion;++i) {
+		for(var i=0;i<count;++i) {
 			// choose some initial direction (4 times as much vertical component)
 			var vx = Math.random()-0.5; 
 			var vy = 1+Math.random();
@@ -290,12 +290,12 @@ emotesplosions = {
 				id: i
 			}
 			var emote = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
-			var img = new ImageEx(emote.url, emote.type == "gif");
+			var img = new ImageEx(emote.url, emote.type == "gif" || emote.type == "bits-animated");
 			img.onload = function(that) { 
 				return function() {
 					animatedemotes.push({
 						animation: that, 
-						start: performance.now()+that.id*settings.emotesplosionduration*1000/settings.emotesplosion,
+						start: performance.now()+that.id*settings.emotesplosionduration*1000/count,
 						img: this,
 						type: emote.type,
 						w: this.width, h: this.height
@@ -305,8 +305,8 @@ emotesplosions = {
 		}
 	},
 	
-	bubbles: function (ctx, settings, allowedEmotes, animatedemotes) {
-		for(var i=0;i<settings.emotesplosion;++i) {
+	bubbles: function(ctx, settings, allowedEmotes, animatedemotes, count) {
+		for(var i=0;i<count;++i) {
 			var pos = getSpawn(ctx, settings.emotesplosionzone["bubbles"]);
 			var ap = {
 				type: "bubble", 
@@ -319,12 +319,12 @@ emotesplosions = {
 				id: i
 			}
 			var emote = allowedEmotes[Math.floor(Math.random()*allowedEmotes.length)];
-			var img = new ImageEx(emote.url, emote.type == "gif");
+			var img = new ImageEx(emote.url, emote.type == "gif" || emote.type == "bits-animated");
 			img.onload = function(that) { 
 				return function() {
 					animatedemotes.push({
 						animation: that, 
-						start: performance.now()+that.id*settings.emotesplosionduration*1000/settings.emotesplosion, 
+						start: performance.now()+that.id*settings.emotesplosionduration*1000/count, 
 						img: this,
 						type: emote.type,
 						w: this.width, h: this.height

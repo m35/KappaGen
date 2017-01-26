@@ -5,6 +5,7 @@ defaults = {
 	v: 2,
 	bits: true,
 	staticbits: false,
+	cheersplosions: false,
 	ffz: true,
 	bttv: true,
 	gif: true,

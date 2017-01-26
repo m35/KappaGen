@@ -128,7 +128,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		window.requestAnimationFrame(animStep);
 	}
 	
-	function emotesplosion(allowedEmotes) {
+	function emotesplosion(allowedEmotes, emoteCount) {
 		// allowedEmotes can be a list of emotes (in which case we dont change it)
 		// of a string, for example "ffz, bttv"
 		if(typeof(allowedEmotes) === "string") {
@@ -161,7 +161,9 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		if(allowedEmotes.length == 0) {
 			allowedEmotes = globalEmotes;
 		}
-		emotesplosions[$scope.settings.emotesplosiontype](ctx, $scope.settings, allowedEmotes, animatedemotes);
+		var num = emoteCount || $scope.settings.emotesplosion;
+		console.log("Emotesplosion with "+num+" emotes");
+		emotesplosions[$scope.settings.emotesplosiontype](ctx, $scope.settings, allowedEmotes, animatedemotes, num);
 	}
 	
 	function handleCommand(w,data) {
@@ -243,6 +245,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			}
 			// Find bits... fml
 			var foundbits = {};
+			var allbits = [];
 			// check if bits are enabled and this message contains any bits
 			if($scope.settings.bits && parsedmessage[STATE_V3] && parseInt(parsedmessage[STATE_V3].bits) > 0) {
 				// get the total, just double checking for exploits
@@ -264,10 +267,16 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 									if(tier.min_bits <= bits) {
 										var state = $scope.settings.staticbits?"static":bitEmote.state;
 										var url = tier.images[bitEmote.background][state][bitEmote.scale];
-										if(foundbits[url] && $scope.settings.once) break; // this bit has already been found, skip.
+										var emote = {url: CORSProvider + url, type: "bits-"+state, channel: false};
+										for(var l=0;l<bits;++l) {
+											allbits.push(emote);
+										}
 										total -= bits;
-										foundbits[url] = true;
-										drawEmote(extmsg.nick, {url: CORSProvider + url, type: "bits-"+state, channel: false});
+										// draw cheermotes if cheersplosions are disabled
+										if((!foundbits[url] || !$scope.settings.once) && !$scope.settings.cheersplosions) {
+											drawEmote(extmsg.nick, emote);
+										}
+										foundbits[url] = (foundbits[url] || 0)+bits;
 										break; // were done here.
 									}
 								}
@@ -275,6 +284,15 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 							break; // next word
 						}
 					}
+				}
+				// show cheersplosions if enabled
+				if($scope.settings.cheersplosions && allbits.length > 0) {
+					// calculate the number of emotes to explode
+					// The formula was found in parts by trial and error, but is mostly just a log with a highly stretched linear part.
+					var x = allbits.length;
+					var num = Math.ceil((1000*Math.log(1000+x)-1000*Math.log(1001)+1)); 
+					console.log("Cheersplosion with "+num+" cheermotes");
+					emotesplosion(allbits, num);
 				}
 			}
 		}
@@ -286,7 +304,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 			}
 		}
 	}
-	_handleMessage = handleMessage;
+	window._handleMessage = handleMessage;
 
 	extraEmotes = {};
 	function loadFFZ(response) {
