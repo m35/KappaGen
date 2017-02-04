@@ -43,6 +43,7 @@ app.controller("AppCtrl",function($scope, $firebaseObject, $sce, $window, $http)
 		window.location.href = window.location.origin+window.location.pathname+"settings";
 		return;
 	}
+	if(params.background) document.body.style.background = params.background;
 	channel = channel.toLowerCase();
 	var userAccounts = {};
 	var lastSent = {};
